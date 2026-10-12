@@ -9,6 +9,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // サンプルデータを入れるコマンド（server-only の部品を読めるようにする設定付き）
+    seed: "tsx --conditions=react-server prisma/seed.ts",
   },
   datasource: {
     // 表を作る・変える（マイグレーション）ときは、直接接続を使う
