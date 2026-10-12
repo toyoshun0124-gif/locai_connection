@@ -8,7 +8,7 @@ export function LogoutButton() {
   return (
     <button
       type="button"
-      className="mt-6 rounded border border-zinc-300 px-4 py-2"
+      className="shrink-0 rounded border border-zinc-300 px-3 py-1 text-sm"
       onClick={async () => {
         await authClient.signOut();
         router.push("/login");
