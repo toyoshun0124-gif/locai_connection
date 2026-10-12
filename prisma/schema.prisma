@@ -1,0 +1,101 @@
+// データベースの設計図（どんな表があり、どんな項目を持つか）
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 役割：購入者（お店など）か、生産者（農家さん）か
+enum Role {
+  BUYER
+  PRODUCER
+}
+
+// 購入者の区分：飲食店か、一般消費者か（生産者は空のまま）
+enum BuyerType {
+  RESTAURANT
+  CONSUMER
+}
+
+// 関西の2府4県だけ選べる（5章「別人」：関西限定）
+enum Prefecture {
+  OSAKA
+  KYOTO
+  HYOGO
+  NARA
+  SHIGA
+  WAKAYAMA
+}
+
+// ===== ここから下は、ログインの仕組み（Better Auth）が使う表 =====
+
+model User {
+  id            String      @id
+  name          String // ニックネーム（本名は使わない）
+  email         String      @unique
+  emailVerified Boolean     @default(false)
+  image         String?
+  role          Role
+  buyerType     BuyerType?
+  prefecture    Prefecture
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+// ログイン中であることの記録
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+// ログイン方法（メールとパスワードなど）。パスワードは暗号化して保存される
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+// 確認用の一時的な記録（メール確認などで使う）
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}

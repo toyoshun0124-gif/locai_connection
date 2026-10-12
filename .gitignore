@@ -29,3 +29,6 @@ npm-debug.log*
 
 # Vercel の設定（ローカル用）
 .vercel
+
+# Prisma が自動で作るファイル（npm install のときに作り直される）
+/generated
