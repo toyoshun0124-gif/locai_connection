@@ -1,0 +1,29 @@
+// 開発用の箱（devcontainer）の設定
+// VSCode の「Dev Containers」拡張機能が、このファイルを読んで箱を作る
+{
+  "name": "locai-con",
+
+  // Node.js 22 と TypeScript が入った、Microsoft 公式の開発用の箱
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+
+  // 箱の中で動かしたアプリ（Next.js は 3000 番）を、Mac のブラウザで開けるようにする
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Next.js", "onAutoForward": "notify" }
+  },
+
+  // 箱ができたあとに1回だけ実行する。package.json があれば部品をインストールする
+  "postCreateCommand": "if [ -f package.json ]; then npm install; fi",
+
+  "customizations": {
+    "vscode": {
+      // 箱の中の VSCode に入れる拡張機能
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}
