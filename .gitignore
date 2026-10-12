@@ -3,3 +3,5 @@
 
 # 秘密情報（APIキーなど）を入れるファイル。GitHub に送らない
 .env*
+# ただし見本ファイル（値は空）は GitHub に送る
+!.env.example
