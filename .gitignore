@@ -5,3 +5,27 @@
 .env*
 # ただし見本ファイル（値は空）は GitHub に送る
 !.env.example
+
+# npm install で入る部品（量が多く、いつでも入れ直せるので送らない）
+/node_modules
+/.pnp
+.pnp.*
+
+# Next.js が自動で作るファイル（ビルドの結果など）
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# テストの結果
+/coverage
+
+# エラーの記録
+npm-debug.log*
+
+# 鍵ファイル
+*.pem
+
+# Vercel の設定（ローカル用）
+.vercel
