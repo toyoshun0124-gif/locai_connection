@@ -107,6 +107,10 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
           <span className="text-lg font-bold">自分の注文</span>
           <span className="text-sm text-green-800">状態と回答期限を見る →</span>
         </Link>
+        <Link href="/buyer/loss" className="mt-2 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
+          <span className="text-lg font-bold">ロスの記録</span>
+          <span className="text-sm text-green-800">余った量を記録する →</span>
+        </Link>
       </section>
     </>
   );

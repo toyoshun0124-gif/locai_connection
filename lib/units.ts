@@ -14,9 +14,10 @@ export function gramsToKgText(g: number): string {
   return rest === 0 ? String(kg) : `${kg}.${rest}`;
 }
 
-// 1500 → "1.5kg"（画面に出すとき）
+// 1500 → "1.5kg"、125 → "0.125kg"（画面に出すとき。ロスの量は 25g 単位になることがある）
 export function formatKg(g: number): string {
-  return `${gramsToKgText(g)}kg`;
+  if (g % 100 === 0) return `${gramsToKgText(g)}kg`;
+  return `${Math.floor(g / 1000)}.${String(g % 1000).padStart(3, "0").replace(/0+$/, "")}kg`;
 }
 
 // 日本時間の「今日」を "YYYY-MM-DD" で返す（スマホの時計ではなくサーバーの時計を使う）

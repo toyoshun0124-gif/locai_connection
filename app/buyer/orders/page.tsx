@@ -81,7 +81,10 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
     <>
       <AppHeader user={user} />
       <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
-      <h1 className="mt-2 text-xl font-bold text-green-900">自分の注文</h1>
+      <div className="mt-2 flex items-baseline justify-between">
+        <h1 className="text-xl font-bold text-green-900">自分の注文</h1>
+        <Link href="/buyer/loss" className="text-sm text-green-800 underline">ロスの記録 →</Link>
+      </div>
 
       {typeof ordered === "string" && orders.some((o) => o.id === ordered) && (
         <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-green-800">

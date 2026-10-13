@@ -118,6 +118,8 @@ model Order {
   cancelledAfterConfirm Boolean       @default(false) // 販売確定のあとの取消か（キャンセルの回数に数える）
   buyerReadAt           DateTime? // お店が最後にメッセージを読んだ時刻（新しいメッセージの印に使う）
   producerReadAt        DateTime? // 農家さんが最後にメッセージを読んだ時刻
+  lossQuarters          Int? // ロスの記録：余った割合（0＝使い切った、1＝1/4、2＝半分、3＝3/4）。未記録なら空
+  lossRecordedAt        DateTime? // ロスを記録（直した）時刻
   messages              Message[]
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
