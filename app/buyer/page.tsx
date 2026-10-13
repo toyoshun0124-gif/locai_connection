@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { formatYen, totalWithShippingYen } from "@/lib/price";
-import { canOrder, remainingGrams } from "@/lib/stock";
-import { addDays, dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
+import { canOrder, expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
+import { isOrderableShipDate } from "@/lib/order";
+import { dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
@@ -102,10 +103,10 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 
       {/* 自分の注文（4章A⑤） */}
       <section className="mt-8">
-        <h2 className="text-lg font-bold">自分の注文</h2>
-        <p className="mt-2 rounded bg-white/60 p-4 text-stone-600">
-          まだ申し込みはありません。（注文の一覧は、申し込みの機能と一緒に作ります）
-        </p>
+        <Link href="/buyer/orders" className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
+          <span className="text-lg font-bold">自分の注文</span>
+          <span className="text-sm text-green-800">状態と回答期限を見る →</span>
+        </Link>
       </section>
     </>
   );
@@ -113,8 +114,9 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 
 // 探した結果の一覧（食材名・量・産地・値段・出荷できる日）
 async function Results({ keyword, wantG, sort }: { keyword: string; wantG: number | null; sort: keyof typeof SORTS }) {
-  // 申し込めるのは、明日以降に出荷できる日がある、公開中の出品
-  const tomorrow = addDays(todayInJapan(), 1);
+  // 申し込めるのは、出荷日の4日前までの日がある、公開中の出品
+  const today = todayInJapan();
+  await expireOverdueOrders();
   const rows = await prisma.listing.findMany({
     where: { status: "OPEN", name: { contains: keyword, mode: "insensitive" } },
     orderBy: { createdAt: "desc" },
@@ -127,12 +129,13 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
     },
   });
 
+  const remaining = await remainingGramsMap(rows);
   const items = rows
     .map((l) => {
-      const futureDates = l.shipDates.map(dateToYmd).filter((d) => d >= tomorrow);
-      return { ...l, futureDates, remainingG: remainingGrams(l) };
+      const futureDates = l.shipDates.map(dateToYmd).filter((d) => isOrderableShipDate(d, today));
+      return { ...l, futureDates, remainingG: remaining.get(l.id) ?? 0 };
     })
-    // 出荷できる日が残っていて、残りの量がある出品だけ
+    // 申し込める出荷日が残っていて、残りの量がある出品だけ
     .filter((l) => l.futureDates.length > 0 && l.remainingG >= l.minOrderG)
     // 量を入れたときは、その量で申し込める出品だけ（6章ルール6：条件に合えば、新しい農家さんも表示する）
     .filter((l) => wantG === null || canOrder(l, l.remainingG, wantG));

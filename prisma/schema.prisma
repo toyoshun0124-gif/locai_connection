@@ -70,10 +70,56 @@ model Listing {
   status          ListingStatus @default(OPEN)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  orders          Order[]
 
   @@index([producerId, createdAt])
   @@index([status, name])
   @@map("listing")
+}
+
+// 注文の状態（6章の取引の流れ）
+enum OrderStatus {
+  PENDING // 農家さんの返事待ち（仮押さえ中）
+  CHANGE_PROPOSED // 三上さんの返事待ち（農家さんが量を変えた。仮押さえ中）
+  CONFIRMED // 販売確定
+  DECLINED // 見送り（農家さんが売らないと決めた）
+  CANCELLED // 取消
+  EXPIRED // 期限切れ
+}
+
+// 受け取り方法
+enum ReceiveMethod {
+  DELIVERY // 農家さんが届ける
+  PICKUP // お店が取りに行く
+}
+
+// 注文（申し込み）。量は g、金額は円の整数。金額は申し込んだ時点でアプリが計算して記録する
+model Order {
+  id             String        @id @default(cuid())
+  listingId      String
+  listing        Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId        String
+  buyer          User          @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  status         OrderStatus   @default(PENDING)
+  quantityG      Int // 申し込んだ量（仮押さえしている量）
+  shipDate       DateTime      @db.Date // 出荷日（出品の出荷できる日から1つ）
+  useDate        DateTime      @db.Date // 使用日（料理に使う日）
+  receive        ReceiveMethod
+  dishName       String? // 料理名（任意。農家さんには見せない）
+  wantAiHelp     Boolean       @default(false) // 買えなかったときに AI に代わりの野菜を提案してもらうか
+  pricePerKg     Int // 申し込んだ時点の単価（円/kg）
+  itemYen        Int // 野菜の代金（円）
+  shippingYen    Int // 送料（円）。取りに行くときは 0
+  totalYen       Int // 合計（円）
+  replyDeadline  DateTime // 回答期限（この時刻ちょうどまでは期限内）
+  idempotencyKey String // 同じ申し込みを2回保存しないための目印
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([buyerId, idempotencyKey])
+  @@index([listingId, status])
+  @@index([buyerId, createdAt])
+  @@map("order")
 }
 
 // ===== ここから下は、ログインの仕組み（Better Auth）が使う表 =====
@@ -93,6 +139,7 @@ model User {
   accounts      Account[]
   profile       Profile?
   listings      Listing[]
+  orders        Order[]
 
   @@map("user")
 }

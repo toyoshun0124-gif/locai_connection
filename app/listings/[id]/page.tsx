@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { formatYen, itemYen } from "@/lib/price";
-import { remainingGrams } from "@/lib/stock";
-import { addDays, dateToYmd, formatKg, formatYmd, kgTextToGrams, todayInJapan } from "@/lib/units";
+import { expireOverdueOrders, remainingGramsOf } from "@/lib/stock";
+import { isOrderableShipDate } from "@/lib/order";
+import { OrderForm } from "./order-form";
+import { addDays, dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
 
 export default function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
@@ -72,7 +74,12 @@ async function ListingDetail({
     );
   }
 
-  const remainingG = remainingGrams(l);
+  // 期限切れの仮押さえを戻してから、残りの量を計算する
+  await expireOverdueOrders();
+  const remainingG = await remainingGramsOf(prisma, l);
+  // 申し込める出荷日（出荷日の4日前まで）
+  const today = todayInJapan();
+  const orderableDates = futureDates.filter((d) => isOrderableShipDate(d, today)).map((d) => ({ ymd: d, label: formatYmd(d) }));
   // 内訳の計算に使う量：一覧で入れた量があればそれ、なければいちばん少ない注文量
   const wantG = typeof kg === "string" ? kgTextToGrams(kg) : null;
   const g = wantG ?? l.minOrderG;
@@ -161,10 +168,21 @@ async function ListingDetail({
         出品日：{l.createdAt.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}
       </p>
 
-      {/* 申し込みは次のステップで作る */}
-      <button type="button" disabled className="mt-4 w-full rounded-full bg-green-800 py-3 font-medium text-white opacity-50">
-        申し込む（準備中）
-      </button>
+      {/* 申し込み */}
+      <section className={card}>
+        <h2 className="text-lg font-bold text-green-900">申し込む</h2>
+        <p className="mb-3 text-xs text-stone-500">出荷日の4日前まで申し込めます</p>
+        {remainingG < l.minOrderG ? (
+          <p className="text-stone-600">いまは申し込める量が残っていません。農家さんの返事によっては、また申し込めるようになります。</p>
+        ) : (
+          <OrderForm
+            listing={{ id: l.id, name: l.name, pricePerKg: l.pricePerKg, minOrderG: l.minOrderG, unitG: l.unitG, delivery: l.delivery, pickup: l.pickup, shippingYen: l.shippingYen }}
+            remainingG={remainingG}
+            orderableDates={orderableDates}
+            initialKg={wantG !== null ? gramsToKgText(wantG) : ""}
+          />
+        )}
+      </section>
     </>
   );
 }
