@@ -100,7 +100,9 @@ export function OrderForm({ listing, remainingG, orderableDates, initialKg }: Pr
           <p>{state.message}</p>
           <div className="mt-2 flex flex-wrap gap-3">
             <Link href={`/buyer?q=${encodeURIComponent(listing.name)}`} className="text-green-800 underline">ほかの農家さんの出品を見る</Link>
-            <span className="text-stone-500">代わりの野菜を探す（AIの提案）は準備中です</span>
+            <Link href={`/buyer/alternatives?${new URLSearchParams({ item: listing.name, ...(quantity ? { kg: quantity } : {}) })}`} className="text-green-800 underline">
+              代わりの野菜を探す（AIの提案）
+            </Link>
           </div>
         </div>
       )}

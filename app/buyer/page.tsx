@@ -150,9 +150,15 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
         「{keyword}」{wantG !== null && `を ${formatKg(wantG)}`}：{items.length}件
       </p>
       {items.length === 0 ? (
-        <p className="mt-2 rounded-xl bg-white p-4 text-stone-600">
-          条件に合う出品が見つかりませんでした。{wantG !== null && "ほしい量を変えると見つかるかもしれません。"}
-        </p>
+        <div className="mt-2 rounded-xl bg-white p-4 text-stone-600">
+          <p>条件に合う出品が見つかりませんでした。{wantG !== null && "ほしい量を変えると見つかるかもしれません。"}</p>
+          <Link
+            href={`/buyer/alternatives?${new URLSearchParams({ item: keyword, ...(wantG !== null ? { kg: gramsToKgText(wantG) } : {}) })}`}
+            className="mt-2 inline-block rounded-full bg-green-800 px-4 py-2 text-sm text-white hover:bg-green-900"
+          >
+            代わりの野菜を探す（AIの提案）
+          </Link>
+        </div>
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
           {items.map((l) => {

@@ -123,6 +123,11 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
                   受け取り場所：{addresses.get(o.listing.producerId) ?? "農家さんの住所が登録されていません"}
                 </p>
               )}
+              {(o.status === "DECLINED" || o.status === "EXPIRED" || o.status === "CHANGE_PROPOSED") && (
+                <Link href={`/buyer/alternatives?order=${o.id}`} className="mr-2 mt-2 inline-flex rounded-full bg-green-800 px-3 py-1 text-sm text-white hover:bg-green-900">
+                  {o.status === "CHANGE_PROPOSED" ? "足りない分の代わりを探す（AI）" : "代わりの野菜を探す（AI）"}
+                </Link>
+              )}
               <MessageLink orderId={o.id} count={msgs.get(o.id)?.count ?? 0} hasNew={msgs.get(o.id)?.hasNew ?? false} />
               {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <BuyerButtons orderId={o.id} status={o.status} />}
               {/* 販売確定のあとの取消は、出荷日の前日まで */}
