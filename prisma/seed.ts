@@ -37,6 +37,23 @@ const listings = [
   { email: "biwako-shinmai@example.com", name: "伏見甘長とうがらし", city: "高島市", pricePerKg: 1300, quantityG: 5000, minOrderG: 500, unitG: 500, delivery: true, pickup: true, shippingYen: 600, replyDays: 2, days: [3, 4, 5] },
 ] as const;
 
+// 相場の参考（4章B③）のための、作り物の「過去の記録」。過去の記録専用のアカウント（ログインには使わない）の出品・注文として入れる
+const historyProducers = [
+  { email: "history-farm-a@example.com", name: "（過去の記録用）農家A", role: "PRODUCER", prefecture: "KYOTO" },
+  { email: "history-farm-b@example.com", name: "（過去の記録用）農家B", role: "PRODUCER", prefecture: "NARA" },
+] as const;
+const historyBuyers = [
+  { email: "history-shop-a@example.com", name: "（過去の記録用）お店A", role: "BUYER", buyerType: "RESTAURANT", prefecture: "OSAKA" },
+  { email: "history-shop-b@example.com", name: "（過去の記録用）お店B", role: "BUYER", buyerType: "RESTAURANT", prefecture: "KYOTO" },
+  { email: "history-shop-c@example.com", name: "（過去の記録用）お店C", role: "BUYER", buyerType: "CONSUMER", prefecture: "HYOGO" },
+] as const;
+// 食材ごとの、過去の出品の値段（円/kg）と、それぞれの出品に来た申し込みの量（g）
+const history = [
+  { name: "賀茂茄子", prices: [1000, 1100, 1150, 1200, 1200, 1250, 1300, 1500], orders: [[2000, 3000], [2000], [4000, 2000], [3000], [2000, 2500], [3000], [5000], [1000]] },
+  { name: "万願寺唐辛子", prices: [1300, 1400, 1450, 1500, 1500, 1700], orders: [[1000, 500], [1500], [1000], [2000, 1000], [1000], [1500]] },
+  { name: "大和まな", prices: [800, 900, 950], orders: [[], [], []] },
+];
+
 async function main() {
   // ログインの仕組みを通して登録する（パスワードが正しく暗号化されるように）
   const { auth } = await import("../lib/auth");
@@ -85,6 +102,48 @@ async function main() {
     });
     console.log(`出品しました：${producer.name}の${data.name}`);
   }
+
+  // 過去の記録（作り物）を入れる。すでに入っていれば飛ばす
+  const historyExists = await prisma.user.findUnique({ where: { email: historyProducers[0].email } });
+  if (historyExists) {
+    console.log("すでにあります：過去の記録");
+  } else {
+    // ログインには使わないので、推測できないパスワードにする
+    const password = crypto.randomUUID();
+    for (const u of [...historyProducers, ...historyBuyers]) await auth.api.signUpEmail({ body: { ...u, password } });
+    const producers = await prisma.user.findMany({ where: { email: { in: historyProducers.map((u) => u.email) } } });
+    const buyers = await prisma.user.findMany({ where: { email: { in: historyBuyers.map((u) => u.email) } } });
+    const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000);
+    const dateOnly = (d: Date) => new Date(`${d.toISOString().slice(0, 10)}T00:00:00Z`);
+    let n = 0;
+    for (const h of history) {
+      for (let i = 0; i < h.prices.length; i++) {
+        const created = daysAgo(80 - i * 9); // 80日前〜少し前まで、ばらばらの日に出品したことにする
+        const producer = producers[i % producers.length];
+        const listing = await prisma.listing.create({
+          data: {
+            producerId: producer.id, name: h.name, city: producer.prefecture === "KYOTO" ? "亀岡市" : "天理市",
+            pricePerKg: h.prices[i], quantityG: 20000, minOrderG: 500, unitG: 500, delivery: true, pickup: false,
+            shippingYen: 800, replyDays: 2, shipDates: [dateOnly(daysAgo(75 - i * 9))], status: "CLOSED", createdAt: created,
+          },
+        });
+        for (const [j, g] of h.orders[i].entries()) {
+          const item = Math.floor((h.prices[i] * g) / 1000);
+          await prisma.order.create({
+            data: {
+              listingId: listing.id, buyerId: buyers[(i + j) % buyers.length].id, status: "CONFIRMED", quantityG: g,
+              shipDate: dateOnly(daysAgo(75 - i * 9)), useDate: dateOnly(daysAgo(74 - i * 9)), receive: "DELIVERY",
+              pricePerKg: h.prices[i], itemYen: item, shippingYen: 800, totalYen: item + 800,
+              replyDeadline: daysAgo(77 - i * 9), idempotencyKey: `seed-history-${h.name}-${i}-${j}`, createdAt: daysAgo(78 - i * 9),
+            },
+          });
+          n++;
+        }
+      }
+    }
+    console.log(`過去の記録を入れました：出品 ${history.reduce((a, h) => a + h.prices.length, 0)}件・販売確定 ${n}件`);
+  }
+
   await prisma.$disconnect();
 }
 

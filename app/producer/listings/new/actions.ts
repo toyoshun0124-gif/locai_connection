@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { listingSchema } from "@/lib/listing";
+import { marketFor, type Market } from "@/lib/market";
+import { z } from "zod";
 
 export type ListingFormState = {
   message: string;
@@ -61,4 +63,13 @@ export async function createListing(_prev: ListingFormState, formData: FormData)
     },
   });
   redirect("/producer?listed=1");
+}
+
+// 相場の参考を返す（出品画面で、商品名を入れたときに呼ぶ）。生産者だけ
+export async function getMarket(name: string): Promise<Market | null> {
+  const user = await getCurrentUser();
+  if (user.role !== "PRODUCER") return null;
+  const parsed = z.string().trim().min(1).max(30).safeParse(name);
+  if (!parsed.success) return null;
+  return marketFor(parsed.data);
 }

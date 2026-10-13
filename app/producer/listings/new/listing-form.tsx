@@ -1,8 +1,10 @@
 "use client";
 // 出品の入力フォーム（入力した内容は、エラーが出ても消えない）
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { createListing, type ListingFormState } from "./actions";
+import { createListing, getMarket, type ListingFormState } from "./actions";
+import type { Market, Stat } from "@/lib/market";
+import { formatKg } from "@/lib/units";
 
 export type ListingValues = {
   name: string;
@@ -28,6 +30,18 @@ export function ListingForm({
   prefectureLabel: string;
 }) {
   const [v, setV] = useState(initial);
+  // 相場の参考（商品名を入れて少ししたら、サーバーに問い合わせる）
+  const [market, setMarket] = useState<Market | null>(null);
+  useEffect(() => {
+    const name = v.name.trim();
+    if (!name) return;
+    const timer = setTimeout(() => {
+      getMarket(name).then(setMarket);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [v.name]);
+  // 商品名が空なら、相場は出さない
+  const shownMarket = v.name.trim() && market?.name === v.name.trim() ? market : null;
   const [state, formAction, pending] = useActionState<ListingFormState, FormData>(createListing, { message: "" });
   const err = (key: string) => state.errors?.[key];
   const set = (patch: Partial<ListingValues>) => setV({ ...v, ...patch });
@@ -59,6 +73,7 @@ export function ListingForm({
           <span className={label}>値段（1kgあたり・円）</span>
           <input name="pricePerKg" inputMode="numeric" className={input} value={v.pricePerKg} onChange={(e) => set({ pricePerKg: e.target.value })} placeholder="例：1200" />
           {errorText("pricePerKg")}
+          <PriceHint name={v.name} market={shownMarket} />
         </label>
 
         <fieldset className="flex flex-col gap-1">
@@ -118,6 +133,7 @@ export function ListingForm({
           </label>
         </div>
         <p className="-mt-2 text-xs text-stone-500">例：1kg から 0.5kg ずつ → お店は 1kg、1.5kg、2kg… で申し込めます</p>
+        <SizeHint market={shownMarket} />
 
         <fieldset className="flex flex-col gap-1">
           <legend className={label}>受け取り条件（1つ以上）</legend>
@@ -161,5 +177,44 @@ export function ListingForm({
         {pending ? "出品しています…" : "出品する"}
       </button>
     </form>
+  );
+}
+
+// 値段の相場（参考）。真ん中の値と、よくある範囲。記録が少なければ、そう伝える
+function priceLine(label: string, st: Stat) {
+  if (st.median === null) return <li>{label}：まだ参考になる記録がありません（{st.count}件）</li>;
+  return (
+    <li>
+      {label}：真ん中 <span className="font-bold">{st.median.toLocaleString("ja-JP")}円/kg</span>
+      <span className="text-stone-500">（多くは {st.low.toLocaleString("ja-JP")}〜{st.high.toLocaleString("ja-JP")}円、{st.count}件）</span>
+    </li>
+  );
+}
+
+function PriceHint({ name, market }: { name: string; market: Market | null }) {
+  if (!name.trim()) return <span className="text-xs text-stone-500">商品名を入れると、このアプリでの相場の参考が出ます</span>;
+  if (!market) return null;
+  return (
+    <div className="mt-1 rounded-lg bg-white px-3 py-2 text-xs text-stone-700 ring-1 ring-stone-200">
+      <p className="font-medium">「{market.name}」の相場（このアプリの最近90日の記録）</p>
+      <ul className="mt-0.5">
+        {priceLine("販売確定", market.confirmedPrice)}
+        {priceLine("出品", market.listedPrice)}
+      </ul>
+      <p className="mt-0.5 text-stone-500">参考です。値段はあなたが決めます。</p>
+    </div>
+  );
+}
+
+// お店が申し込んでいる量（参考）
+function SizeHint({ market }: { market: Market | null }) {
+  if (!market) return null;
+  const st = market.orderSize;
+  return (
+    <p className="-mt-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-700">
+      {st.median === null
+        ? `「${market.name}」の申し込みの量は、まだ参考になる記録がありません（${st.count}件）`
+        : `「${market.name}」は、多くのお店が ${formatKg(st.low)}〜${formatKg(st.high)} で申し込んでいます（${st.count}件）。少なすぎる量・多すぎる量にすると、申し込みが来にくくなるかもしれません。`}
+    </p>
   );
 }
