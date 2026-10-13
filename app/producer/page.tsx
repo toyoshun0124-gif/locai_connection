@@ -3,7 +3,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { dateToYmd, formatKg, formatYmd } from "@/lib/units";
+import { dateToYmd, formatKg, formatYmd, gramsToKgText } from "@/lib/units";
+import { BUYER_TYPES, PREFECTURES } from "@/lib/options";
+import { RECEIVE_LABELS } from "@/lib/order";
+import { formatYen } from "@/lib/price";
+import { expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
+import { ProducerButtons } from "../orders/respond-buttons";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
@@ -30,10 +35,27 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
 
   const { listed } = await searchParams;
   // 自分の出品だけを、新しい順に出す
+  await expireOverdueOrders();
   const listings = await prisma.listing.findMany({
     where: { producerId: user.id },
     orderBy: { createdAt: "desc" },
   });
+  const remaining = await remainingGramsMap(listings);
+
+  // 自分の出品に届いた、返事待ち・販売確定の申し込み（申し込んだ順）
+  // お店の情報は、プロフィールで公開している項目だけ（料理名・住所・メールは読まない）
+  const orders = await prisma.order.findMany({
+    where: { listing: { producerId: user.id }, status: { in: ["PENDING", "CHANGE_PROPOSED", "CONFIRMED"] } },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true, listingId: true, status: true, quantityG: true, requestedG: true, itemYen: true, shippingYen: true, totalYen: true,
+      shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
+      buyer: { select: { name: true, buyerType: true, prefecture: true, profile: { select: { city: true, shopKind: true, policy: true } } } },
+    },
+  });
+  const fmtDateTime = (d: Date) =>
+    d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const listingsWithOrders = listings.filter((l) => orders.some((o) => o.listingId === l.id));
 
   return (
     <>
@@ -44,9 +66,54 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
       {/* 届いた申し込み（4章B④：申し込んだ順に並べる） */}
       <section className="mt-6">
         <h1 className="text-xl font-bold">届いた申し込み</h1>
-        <p className="mt-2 rounded bg-zinc-50 p-4 text-zinc-600">
-          まだ申し込みはありません。（申し込みの一覧は、申し込みの機能と一緒に作ります）
-        </p>
+        {listingsWithOrders.length === 0 ? (
+          <p className="mt-2 rounded bg-zinc-50 p-4 text-zinc-600">まだ申し込みはありません。</p>
+        ) : (
+          listingsWithOrders.map((l) => {
+            const mine = orders.filter((o) => o.listingId === l.id);
+            const heldG = mine.filter((o) => o.status !== "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
+            const confirmedG = mine.filter((o) => o.status === "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
+            return (
+              <div key={l.id} className="mt-3 rounded-xl border border-stone-200 bg-white p-4">
+                <p className="font-bold">{l.name}<span className="ml-2 text-sm font-normal text-stone-500">出品 {formatKg(l.quantityG)}</span></p>
+                <ol className="mt-2 flex flex-col gap-3">
+                  {mine.map((o, i) => {
+                    const p = o.buyer.profile;
+                    return (
+                      <li key={o.id} className="rounded-lg bg-stone-50 p-3">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-medium">{i + 1}. {o.buyer.name}</p>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${o.status === "CONFIRMED" ? "bg-green-100 text-green-900" : o.status === "CHANGE_PROPOSED" ? "bg-amber-100 text-amber-900" : "bg-sky-100 text-sky-900"}`}>
+                            {o.status === "CONFIRMED" ? "販売確定" : o.status === "CHANGE_PROPOSED" ? "お店の返事待ち" : "あなたの返事待ち"}
+                          </span>
+                        </div>
+                        {/* お店のプロフィール（公開している項目だけ） */}
+                        <p className="text-xs text-stone-500">
+                          {PREFECTURES[o.buyer.prefecture]}{p?.city ?? ""}・{p?.shopKind ?? (o.buyer.buyerType ? BUYER_TYPES[o.buyer.buyerType] : "")}・販売確定後のキャンセル：0回
+                        </p>
+                        {p?.policy && <p className="whitespace-pre-wrap text-xs text-stone-600">方針：{p.policy}</p>}
+                        <p className="mt-1 text-stone-800">
+                          {o.requestedG !== null && <span className="text-stone-500 line-through">{formatKg(o.requestedG)}</span>}{o.requestedG !== null && " → "}
+                          <span className="font-bold">{formatKg(o.quantityG)}</span>・<span className="font-bold">{formatYen(o.totalYen)}</span>
+                          <span className="text-xs text-stone-500">（野菜 {formatYen(o.itemYen)}{o.shippingYen > 0 && ` ＋ 送料 ${formatYen(o.shippingYen)}`}）</span>
+                        </p>
+                        <p className="text-sm text-stone-600">
+                          出荷 {formatYmd(dateToYmd(o.shipDate))}・使用 {formatYmd(dateToYmd(o.useDate))}・{RECEIVE_LABELS[o.receive]}
+                        </p>
+                        {o.status !== "CONFIRMED" && <p className="text-sm font-medium text-sky-900">回答期限：{fmtDateTime(o.replyDeadline)}</p>}
+                        {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <ProducerButtons orderId={o.id} status={o.status} minKg={gramsToKgText(l.minOrderG)} />}
+                      </li>
+                    );
+                  })}
+                </ol>
+                {/* 一覧の下：申し込みの合計と、全部売った場合の残り（4章B④） */}
+                <p className="mt-3 border-t border-stone-200 pt-2 text-sm text-stone-700">
+                  販売確定 {formatKg(confirmedG)}・返事待ち {formatKg(heldG)}・<span className="font-bold">全部売った場合の残り {formatKg(remaining.get(l.id) ?? 0)}</span>
+                </p>
+              </div>
+            );
+          })
+        )}
       </section>
 
       {/* 自分の出品（4章B②） */}

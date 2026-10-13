@@ -101,7 +101,8 @@ model Order {
   buyerId        String
   buyer          User          @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   status         OrderStatus   @default(PENDING)
-  quantityG      Int // 申し込んだ量（仮押さえしている量）
+  quantityG      Int // いまの量（仮押さえ・販売確定している量）。農家さんが減らしたら、減らした量になる
+  requestedG     Int? // 農家さんが量を減らしたときの、もとの申し込みの量
   shipDate       DateTime      @db.Date // 出荷日（出品の出荷できる日から1つ）
   useDate        DateTime      @db.Date // 使用日（料理に使う日）
   receive        ReceiveMethod

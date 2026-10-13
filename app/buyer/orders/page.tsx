@@ -8,6 +8,7 @@ import { formatYen } from "@/lib/price";
 import { expireOverdueOrders } from "@/lib/stock";
 import { dateToYmd, formatKg, formatYmd } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
+import { BuyerButtons } from "../../orders/respond-buttons";
 
 // 状態ごとの色（返事が必要なものほど目立たせる）
 const STATUS_STYLES = {
@@ -53,7 +54,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {
-      id: true, status: true, quantityG: true, totalYen: true, itemYen: true, shippingYen: true,
+      id: true, status: true, quantityG: true, requestedG: true, totalYen: true, itemYen: true, shippingYen: true,
       shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
       listing: { select: { id: true, name: true, producer: { select: { name: true } } } },
     },
@@ -85,6 +86,11 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
                 <p className="font-bold">{o.listing.name}<span className="ml-2 text-sm font-normal text-stone-500">{o.listing.producer.name}</span></p>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[o.status]}`}>{STATUS_LABELS[o.status]}</span>
               </div>
+              {o.status === "CHANGE_PROPOSED" && o.requestedG !== null && (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  農家さんから「{formatKg(o.quantityG)}なら売れます」と返事が来ました（申し込み {formatKg(o.requestedG)}）。この量でよければ「この量でOK」を押してください。
+                </p>
+              )}
               <p className="mt-1 text-stone-800">
                 {formatKg(o.quantityG)}・<span className="font-bold">{formatYen(o.totalYen)}</span>
                 <span className="text-sm text-stone-500">（野菜 {formatYen(o.itemYen)}{o.shippingYen > 0 && ` ＋ 送料 ${formatYen(o.shippingYen)}`}）</span>
@@ -95,6 +101,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
               {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && (
                 <p className="text-sm font-medium text-sky-900">回答期限：{fmtDateTime(o.replyDeadline)}</p>
               )}
+              {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <BuyerButtons orderId={o.id} status={o.status} />}
             </li>
           ))}
         </ul>
