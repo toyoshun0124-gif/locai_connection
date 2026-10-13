@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { formatYen, totalWithShippingYen } from "@/lib/price";
 import { canOrder, remainingGrams } from "@/lib/stock";
-import { addDays, dateToYmd, formatKg, kgTextToGrams, todayInJapan } from "@/lib/units";
+import { addDays, dateToYmd, formatKg, formatYmd, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
@@ -110,7 +110,7 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
   );
 }
 
-// 探した結果の一覧（食材名・量・産地・値段）
+// 探した結果の一覧（食材名・量・産地・値段・出荷できる日）
 async function Results({ keyword, wantG, sort }: { keyword: string; wantG: number | null; sort: keyof typeof SORTS }) {
   // 申し込めるのは、明日以降に出荷できる日がある、公開中の出品
   const tomorrow = addDays(todayInJapan(), 1);
@@ -166,6 +166,10 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
                     <p className="mt-1 text-sm text-stone-800">
                       残り <span className="font-bold">{formatKg(l.remainingG)}</span>
                       <span className="text-stone-500">（{formatKg(l.minOrderG)}から{formatKg(l.unitG)}ずつ）</span>
+                    </p>
+                    {/* 5. 出荷できる日（いちばん早い日だけ。ほかの日は詳細画面で見せる） */}
+                    <p className="text-sm text-stone-800">
+                      出荷：{formatYmd(l.futureDates[0])}{l.futureDates.length > 1 && "〜"}
                     </p>
                   </div>
                   {/* 4. 値段（1kgあたりを大きく、送料込みはその下に） */}
