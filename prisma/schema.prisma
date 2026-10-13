@@ -116,6 +116,9 @@ model Order {
   idempotencyKey        String // 同じ申し込みを2回保存しないための目印
   cancelledBy           Role? // 取り消した人（購入者／生産者）
   cancelledAfterConfirm Boolean       @default(false) // 販売確定のあとの取消か（キャンセルの回数に数える）
+  buyerReadAt           DateTime? // お店が最後にメッセージを読んだ時刻（新しいメッセージの印に使う）
+  producerReadAt        DateTime? // 農家さんが最後にメッセージを読んだ時刻
+  messages              Message[]
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -123,6 +126,20 @@ model Order {
   @@index([listingId, status])
   @@index([buyerId, createdAt])
   @@map("order")
+}
+
+// 注文ごとのメッセージ（その注文のお店と農家さんだけが読み書きできる）
+model Message {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body      String // 本文（200字まで）
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("message")
 }
 
 // ===== ここから下は、ログインの仕組み（Better Auth）が使う表 =====
@@ -143,6 +160,7 @@ model User {
   profile       Profile?
   listings      Listing[]
   orders        Order[]
+  messages      Message[]
 
   @@map("user")
 }

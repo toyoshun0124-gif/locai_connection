@@ -10,6 +10,9 @@ import { RECEIVE_LABELS } from "@/lib/order";
 import { formatYen } from "@/lib/price";
 import { expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { ProducerButtons, ProducerCancelButton } from "../orders/respond-buttons";
+import { MessageLink } from "../orders/message-link";
+import { messageSummary } from "@/lib/messages";
+import { STATUS_LABELS } from "@/lib/order";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
@@ -51,7 +54,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
     select: {
       id: true, listingId: true, status: true, quantityG: true, requestedG: true, itemYen: true, shippingYen: true, totalYen: true,
       shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
-      buyerId: true,
+      buyerId: true, producerReadAt: true,
       buyer: { select: { name: true, buyerType: true, prefecture: true, profile: { select: { city: true, shopKind: true, policy: true } } } },
     },
   });
@@ -66,6 +69,15 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
     (await prisma.profile.findMany({ where: { userId: { in: deliveryBuyerIds } }, select: { userId: true, address: true } })).map((p) => [p.userId, p.address]),
   );
   const today = todayInJapan();
+
+  // 終わった申し込み（見送り・取消・期限切れ）。メッセージはいつでも送れるので、取引の画面へ行けるようにする
+  const finished = await prisma.order.findMany({
+    where: { listing: { producerId: user.id }, status: { in: ["DECLINED", "CANCELLED", "EXPIRED"] } },
+    orderBy: { updatedAt: "desc" },
+    take: 30,
+    select: { id: true, status: true, quantityG: true, producerReadAt: true, buyer: { select: { name: true } }, listing: { select: { name: true } } },
+  });
+  const msgs = await messageSummary(user.id, [...orders, ...finished].map((o) => ({ id: o.id, readAt: o.producerReadAt })));
 
   return (
     <>
@@ -119,6 +131,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
                         )}
                         {/* 販売確定のあとの取消は、出荷日の前日まで */}
                         {o.status === "CONFIRMED" && today < dateToYmd(o.shipDate) && <ProducerCancelButton orderId={o.id} />}
+                        <MessageLink orderId={o.id} count={msgs.get(o.id)?.count ?? 0} hasNew={msgs.get(o.id)?.hasNew ?? false} />
                         {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <ProducerButtons orderId={o.id} status={o.status} minKg={gramsToKgText(l.minOrderG)} />}
                       </li>
                     );
@@ -133,6 +146,23 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
           })
         )}
       </section>
+
+      {finished.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-bold">終わった申し込み</h2>
+          <ul className="mt-2 flex flex-col gap-2">
+            {finished.map((o) => (
+              <li key={o.id} className="rounded-xl border border-stone-200 bg-white p-3">
+                <p className="text-sm">
+                  {o.listing.name}・{o.buyer.name}・{formatKg(o.quantityG)}
+                  <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">{STATUS_LABELS[o.status]}</span>
+                </p>
+                <MessageLink orderId={o.id} count={msgs.get(o.id)?.count ?? 0} hasNew={msgs.get(o.id)?.hasNew ?? false} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* 自分の出品（4章B②） */}
       <section className="mt-8">

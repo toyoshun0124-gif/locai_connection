@@ -9,6 +9,8 @@ import { expireOverdueOrders } from "@/lib/stock";
 import { dateToYmd, formatKg, formatYmd, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
 import { BuyerButtons } from "../../orders/respond-buttons";
+import { MessageLink } from "../../orders/message-link";
+import { messageSummary } from "@/lib/messages";
 
 // 状態ごとの色（返事が必要なものほど目立たせる）
 const STATUS_STYLES = {
@@ -56,7 +58,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
     select: {
       id: true, status: true, quantityG: true, requestedG: true, totalYen: true, itemYen: true, shippingYen: true,
       shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
-      cancelledBy: true, cancelledAfterConfirm: true,
+      cancelledBy: true, cancelledAfterConfirm: true, buyerReadAt: true,
       listing: { select: { id: true, name: true, producerId: true, producer: { select: { name: true } } } },
     },
   });
@@ -68,6 +70,9 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
     (await prisma.profile.findMany({ where: { userId: { in: pickupProducerIds } }, select: { userId: true, address: true } })).map((p) => [p.userId, p.address]),
   );
   const today = todayInJapan();
+  const msgs = await messageSummary(user.id, orders.map((o) => ({ id: o.id, readAt: o.buyerReadAt })));
+  // 新しいメッセージがある注文を、いちばん上に出す（返事が必要なものが目立つように）
+  orders.sort((a, b) => Number(msgs.get(b.id)?.hasNew ?? false) - Number(msgs.get(a.id)?.hasNew ?? false));
 
   const fmtDateTime = (d: Date) =>
     d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -118,6 +123,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
                   受け取り場所：{addresses.get(o.listing.producerId) ?? "農家さんの住所が登録されていません"}
                 </p>
               )}
+              <MessageLink orderId={o.id} count={msgs.get(o.id)?.count ?? 0} hasNew={msgs.get(o.id)?.hasNew ?? false} />
               {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <BuyerButtons orderId={o.id} status={o.status} />}
               {/* 販売確定のあとの取消は、出荷日の前日まで */}
               {o.status === "CONFIRMED" && today < dateToYmd(o.shipDate) && <BuyerButtons orderId={o.id} status="CONFIRMED" />}
