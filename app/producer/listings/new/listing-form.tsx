@@ -214,7 +214,7 @@ function SizeHint({ market }: { market: Market | null }) {
     <p className="-mt-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-700">
       {st.median === null
         ? `「${market.name}」の申し込みの量は、まだ参考になる記録がありません（${st.count}件）`
-        : `「${market.name}」は、多くのお店が ${formatKg(st.low)}〜${formatKg(st.high)} で申し込んでいます（${st.count}件）。少なすぎる量・多すぎる量にすると、申し込みが来にくくなるかもしれません。`}
+        : `「${market.name}」は、多くのお店が ${formatKg(st.low)}〜${formatKg(st.high)} で申し込んでいます（${st.count}件）`}
     </p>
   );
 }
