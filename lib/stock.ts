@@ -9,12 +9,14 @@ type Db = Prisma.TransactionClient | typeof prisma;
 // 仮押さえになる状態（返事待ちの2つ）
 export const HOLD_STATUSES = ["PENDING", "CHANGE_PROPOSED"] as const;
 
-// 量を使っている注文の条件：販売確定、または期限内の返事待ち（期限ちょうどまでは期限内）
+// 量を使っている注文の条件：販売確定、期限内の返事待ち（期限ちょうどまでは期限内）、
+// 農家さんが販売確定のあとに取り消したもの（6章：高く買うお店に売り直すのを防ぐため、量は戻さない）
 function usingStockWhere(now: Date): Prisma.OrderWhereInput {
   return {
     OR: [
       { status: "CONFIRMED" },
       { status: { in: [...HOLD_STATUSES] }, replyDeadline: { gte: now } },
+      { status: "CANCELLED", cancelledBy: "PRODUCER", cancelledAfterConfirm: true },
     ],
   };
 }

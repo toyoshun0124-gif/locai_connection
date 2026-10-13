@@ -61,7 +61,7 @@ export function ProducerButtons({ orderId, status, minKg }: { orderId: string; s
 }
 
 // 三上さん：減らした量でOK／取り消す
-export function BuyerButtons({ orderId, status }: { orderId: string; status: "PENDING" | "CHANGE_PROPOSED" }) {
+export function BuyerButtons({ orderId, status }: { orderId: string; status: "PENDING" | "CHANGE_PROPOSED" | "CONFIRMED" }) {
   const [state, action, pending] = useActionState<RespondState, FormData>(respondToOrder, { ok: false, message: "" });
   return (
     <form action={action} className="mt-3 flex flex-col gap-2">
@@ -72,10 +72,40 @@ export function BuyerButtons({ orderId, status }: { orderId: string; status: "PE
             この量でOK
           </button>
         )}
-        <button name="action" value="cancel" disabled={pending} className={`${btn} border border-stone-300 text-stone-700`} onClick={confirmFirst("この申し込みを取り消します。元に戻せません。よろしいですか？")}>
-          {status === "CHANGE_PROPOSED" ? "やめる" : "取り消す"}
+        <button
+          name="action"
+          value="cancel"
+          disabled={pending}
+          className={`${btn} border border-stone-300 text-stone-700`}
+          onClick={confirmFirst(
+            status === "CONFIRMED"
+              ? "販売確定した申し込みを取り消します。あなたの「販売確定後のキャンセルの回数」に1回記録され、農家さんから見えるようになります。元に戻せません。よろしいですか？"
+              : "この申し込みを取り消します。元に戻せません。よろしいですか？",
+          )}
+        >
+          {status === "CHANGE_PROPOSED" ? "やめる" : status === "CONFIRMED" ? "販売確定を取り消す" : "取り消す"}
         </button>
       </div>
+      {state.message && <p className="text-sm text-red-600">{state.message}</p>}
+    </form>
+  );
+}
+
+// 農家さん：販売確定のあとの取消（回数に記録されると伝える）
+export function ProducerCancelButton({ orderId }: { orderId: string }) {
+  const [state, action, pending] = useActionState<RespondState, FormData>(respondToOrder, { ok: false, message: "" });
+  return (
+    <form action={action} className="mt-2 flex flex-col gap-1">
+      <input type="hidden" name="orderId" value={orderId} />
+      <button
+        name="action"
+        value="producerCancel"
+        disabled={pending}
+        className={`${btn} self-start border border-stone-300 text-stone-700`}
+        onClick={confirmFirst("販売確定した申し込みを取り消します。あなたの「販売確定後のキャンセルの回数」に1回記録され、お店から見えるようになります。取り消した量は、ほかのお店に売り直せません。よろしいですか？")}
+      >
+        販売確定を取り消す
+      </button>
       {state.message && <p className="text-sm text-red-600">{state.message}</p>}
     </form>
   );

@@ -10,7 +10,7 @@ export type RespondState = { ok: boolean; message: string };
 
 const respondSchema = z.object({
   orderId: z.string().min(1).max(50),
-  action: z.enum(["sell", "reduce", "decline", "accept", "cancel"]),
+  action: z.enum(["sell", "reduce", "decline", "accept", "cancel", "producerCancel"]),
   quantity: z.string().max(10).optional(),
 });
 

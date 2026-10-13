@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { AppHeader } from "../../app-header";
+import { producerCancelCount } from "@/lib/cancel-count";
 
 export default function ProducerProfilePage({ params }: PageProps<"/producers/[id]">) {
   return (
@@ -33,6 +34,7 @@ async function ProducerProfile({ params }: { params: PageProps<"/producers/[id]"
   });
   if (!producer) notFound();
 
+  const cancelCount = await producerCancelCount(id);
   const area = `${PREFECTURES[producer.prefecture]}${producer.profile?.city ?? ""}`;
   return (
     <>
@@ -51,7 +53,7 @@ async function ProducerProfile({ params }: { params: PageProps<"/producers/[id]"
             <dd className="whitespace-pre-wrap text-stone-800">{producer.profile?.policy ?? "まだ登録されていません"}</dd>
           </div>
         </dl>
-        {/* 販売確定後のキャンセルの回数は、注文の機能を作るときに追加する */}
+        <p className="mt-4 text-sm text-stone-600">販売確定後のキャンセル：{cancelCount}回</p>
       </div>
     </>
   );

@@ -3,12 +3,13 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { dateToYmd, formatKg, formatYmd, gramsToKgText } from "@/lib/units";
+import { dateToYmd, formatKg, formatYmd, gramsToKgText, todayInJapan } from "@/lib/units";
+import { buyerCancelCounts } from "@/lib/cancel-count";
 import { BUYER_TYPES, PREFECTURES } from "@/lib/options";
 import { RECEIVE_LABELS } from "@/lib/order";
 import { formatYen } from "@/lib/price";
 import { expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
-import { ProducerButtons } from "../orders/respond-buttons";
+import { ProducerButtons, ProducerCancelButton } from "../orders/respond-buttons";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
@@ -50,12 +51,21 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
     select: {
       id: true, listingId: true, status: true, quantityG: true, requestedG: true, itemYen: true, shippingYen: true, totalYen: true,
       shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
+      buyerId: true,
       buyer: { select: { name: true, buyerType: true, prefecture: true, profile: { select: { city: true, shopKind: true, policy: true } } } },
     },
   });
   const fmtDateTime = (d: Date) =>
     d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const listingsWithOrders = listings.filter((l) => orders.some((o) => o.listingId === l.id));
+  // お店の「販売確定後のキャンセルの回数」
+  const cancelCounts = await buyerCancelCounts([...new Set(orders.map((o) => o.buyerId))]);
+  // お店の届け先は、販売確定していて「届ける」注文の相手の分だけ読む（6章ルール4）
+  const deliveryBuyerIds = [...new Set(orders.filter((o) => o.status === "CONFIRMED" && o.receive === "DELIVERY").map((o) => o.buyerId))];
+  const addresses = new Map(
+    (await prisma.profile.findMany({ where: { userId: { in: deliveryBuyerIds } }, select: { userId: true, address: true } })).map((p) => [p.userId, p.address]),
+  );
+  const today = todayInJapan();
 
   return (
     <>
@@ -89,7 +99,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
                         </div>
                         {/* お店のプロフィール（公開している項目だけ） */}
                         <p className="text-xs text-stone-500">
-                          {PREFECTURES[o.buyer.prefecture]}{p?.city ?? ""}・{p?.shopKind ?? (o.buyer.buyerType ? BUYER_TYPES[o.buyer.buyerType] : "")}・販売確定後のキャンセル：0回
+                          {PREFECTURES[o.buyer.prefecture]}{p?.city ?? ""}・{p?.shopKind ?? (o.buyer.buyerType ? BUYER_TYPES[o.buyer.buyerType] : "")}・販売確定後のキャンセル：{cancelCounts.get(o.buyerId) ?? 0}回
                         </p>
                         {p?.policy && <p className="whitespace-pre-wrap text-xs text-stone-600">方針：{p.policy}</p>}
                         <p className="mt-1 text-stone-800">
@@ -101,6 +111,14 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
                           出荷 {formatYmd(dateToYmd(o.shipDate))}・使用 {formatYmd(dateToYmd(o.useDate))}・{RECEIVE_LABELS[o.receive]}
                         </p>
                         {o.status !== "CONFIRMED" && <p className="text-sm font-medium text-sky-900">回答期限：{fmtDateTime(o.replyDeadline)}</p>}
+                        {/* 届ける場合だけ、販売確定した相手（お店）の届け先を見せる */}
+                        {o.status === "CONFIRMED" && o.receive === "DELIVERY" && (
+                          <p className="mt-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-900">
+                            届け先：{addresses.get(o.buyerId) ?? "お店の住所が登録されていません"}
+                          </p>
+                        )}
+                        {/* 販売確定のあとの取消は、出荷日の前日まで */}
+                        {o.status === "CONFIRMED" && today < dateToYmd(o.shipDate) && <ProducerCancelButton orderId={o.id} />}
                         {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <ProducerButtons orderId={o.id} status={o.status} minKg={gramsToKgText(l.minOrderG)} />}
                       </li>
                     );

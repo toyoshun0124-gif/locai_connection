@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { RECEIVE_LABELS, STATUS_LABELS } from "@/lib/order";
 import { formatYen } from "@/lib/price";
 import { expireOverdueOrders } from "@/lib/stock";
-import { dateToYmd, formatKg, formatYmd } from "@/lib/units";
+import { dateToYmd, formatKg, formatYmd, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
 import { BuyerButtons } from "../../orders/respond-buttons";
 
@@ -56,10 +56,18 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
     select: {
       id: true, status: true, quantityG: true, requestedG: true, totalYen: true, itemYen: true, shippingYen: true,
       shipDate: true, useDate: true, receive: true, replyDeadline: true, createdAt: true,
-      listing: { select: { id: true, name: true, producer: { select: { name: true } } } },
+      cancelledBy: true, cancelledAfterConfirm: true,
+      listing: { select: { id: true, name: true, producerId: true, producer: { select: { name: true } } } },
     },
   });
   orders.sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+
+  // 農家さんの住所は、販売確定していて「取りに行く」注文の相手の分だけ読む（6章ルール4）
+  const pickupProducerIds = [...new Set(orders.filter((o) => o.status === "CONFIRMED" && o.receive === "PICKUP").map((o) => o.listing.producerId))];
+  const addresses = new Map(
+    (await prisma.profile.findMany({ where: { userId: { in: pickupProducerIds } }, select: { userId: true, address: true } })).map((p) => [p.userId, p.address]),
+  );
+  const today = todayInJapan();
 
   const fmtDateTime = (d: Date) =>
     d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -101,7 +109,18 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
               {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && (
                 <p className="text-sm font-medium text-sky-900">回答期限：{fmtDateTime(o.replyDeadline)}</p>
               )}
+              {o.status === "CANCELLED" && o.cancelledAfterConfirm && (
+                <p className="text-sm text-stone-500">販売確定のあとに{o.cancelledBy === "BUYER" ? "あなた" : "農家さん"}が取り消しました</p>
+              )}
+              {/* 取りに行く場合だけ、販売確定した相手（農家さん）の住所を見せる */}
+              {o.status === "CONFIRMED" && o.receive === "PICKUP" && (
+                <p className="mt-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-900">
+                  受け取り場所：{addresses.get(o.listing.producerId) ?? "農家さんの住所が登録されていません"}
+                </p>
+              )}
               {(o.status === "PENDING" || o.status === "CHANGE_PROPOSED") && <BuyerButtons orderId={o.id} status={o.status} />}
+              {/* 販売確定のあとの取消は、出荷日の前日まで */}
+              {o.status === "CONFIRMED" && today < dateToYmd(o.shipDate) && <BuyerButtons orderId={o.id} status="CONFIRMED" />}
             </li>
           ))}
         </ul>

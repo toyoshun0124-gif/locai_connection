@@ -147,6 +147,10 @@ export function OrderForm({ listing, remainingG, orderableDates, initialKg }: Pr
               </label>
             )}
             {err("receive")}
+            {/* 住所が無くて断られたときは、プロフィールへの道を出す */}
+            {errors?.receive?.includes("住所") && (
+              <Link href="/mypage/profile" className="text-sm text-green-800 underline">プロフィールで住所を登録する</Link>
+            )}
           </fieldset>
 
           <div className="flex flex-col gap-1 rounded-lg bg-stone-50 p-3">

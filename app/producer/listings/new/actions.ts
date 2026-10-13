@@ -36,6 +36,14 @@ export async function createListing(_prev: ListingFormState, formData: FormData)
   }
 
   const v = parsed.data;
+
+  // お店が取りに来るときは、受け渡し場所（農家さんの住所）が必要（販売確定したらお店に見せる）
+  if (v.pickup) {
+    const profile = await prisma.profile.findUnique({ where: { userId: user.id }, select: { address: true } });
+    if (!profile?.address) {
+      return { message: "入力内容を確かめてください", errors: { receive: "お店に取りに来てもらうには、先にプロフィールに住所を登録してください" } };
+    }
+  }
   await prisma.listing.create({
     data: {
       producerId: user.id, // 出品者は、画面から送られた値ではなくログインしている本人

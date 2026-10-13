@@ -18,6 +18,15 @@ const users = [
   { email: "biwako-shinmai@example.com", name: "びわこ新米ファーム", role: "PRODUCER", prefecture: "SHIGA" },
 ] as const;
 
+// デモ用のプロフィール（作り物。住所も実在しない作り物にする）
+const profiles = [
+  { email: "mikami@example.com", city: "大阪市福島区", shopKind: "小料理屋", policy: "地産地消にこだわり、京野菜を使っています", address: "（デモ用の作り物の住所）大阪市福島区デモ町1-1" },
+  { email: "kyo-shokudo@example.com", city: "京都市中京区", shopKind: "定食屋", policy: "旬の野菜を、日替わりの定食で出しています", address: "（デモ用の作り物の住所）京都市中京区デモ町2-2" },
+  { email: "kobe-taro@example.com", city: "神戸市灘区", policy: "家族の食卓に、近くの野菜を", address: "（デモ用の作り物の住所）神戸市灘区デモ町3-3" },
+  { email: "sakata@example.com", city: "南丹市", items: "賀茂茄子、万願寺唐辛子", policy: "朝採れをその日に出荷します", address: "（デモ用の作り物の住所）南丹市デモ町4-4" },
+  { email: "yamato-farm@example.com", city: "桜井市", items: "大和まな、賀茂茄子", policy: "大和の伝統野菜を育てています", address: "（デモ用の作り物の住所）桜井市デモ町5-5" },
+] as const;
+
 // デモ用の出品（作り物）。出荷できる日は「今日から◯日後」で決める
 const listings = [
   { email: "sakata@example.com", name: "賀茂茄子", city: "南丹市", pricePerKg: 1200, quantityG: 20000, minOrderG: 1000, unitG: 500, delivery: true, pickup: true, shippingYen: 800, replyDays: 2, days: [3, 6, 10] },
@@ -42,6 +51,20 @@ async function main() {
     }
     await auth.api.signUpEmail({ body: { ...u, password: DEMO_PASSWORD } });
     console.log(`登録しました：${u.name}（${u.email}）`);
+  }
+
+  // デモ用のプロフィールを入れる（まだプロフィールが無い人だけ）
+  for (const p of profiles) {
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: p.email } });
+    const { email, ...data } = p;
+    void email;
+    const exists = await prisma.profile.findUnique({ where: { userId: user.id } });
+    if (exists) {
+      console.log(`すでにあります：${user.name}のプロフィール`);
+      continue;
+    }
+    await prisma.profile.create({ data: { userId: user.id, ...data } });
+    console.log(`プロフィールを入れました：${user.name}`);
   }
 
   // デモ用の出品を入れる

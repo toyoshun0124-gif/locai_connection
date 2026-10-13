@@ -45,6 +45,14 @@ export async function createOrder(_prev: OrderFormState, formData: FormData): Pr
   }
   const v = parsed.data;
 
+  // 届けてもらうときは、届け先（お店の住所）が必要（販売確定したら農家さんに見せる）
+  if (v.receive === "DELIVERY") {
+    const profile = await prisma.profile.findUnique({ where: { userId: user.id }, select: { address: true } });
+    if (!profile?.address) {
+      return { message: "入力内容を確かめてください", errors: { receive: "届けてもらうには、先にプロフィールに住所を登録してください" } };
+    }
+  }
+
   let orderId: string;
   try {
     orderId = await prisma.$transaction(async (tx) => {

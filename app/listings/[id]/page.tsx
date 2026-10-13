@@ -8,6 +8,7 @@ import { formatYen, itemYen } from "@/lib/price";
 import { expireOverdueOrders, remainingGramsOf } from "@/lib/stock";
 import { isOrderableShipDate } from "@/lib/order";
 import { OrderForm } from "./order-form";
+import { producerCancelCount } from "@/lib/cancel-count";
 import { addDays, dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
 
@@ -84,8 +85,8 @@ async function ListingDetail({
   const wantG = typeof kg === "string" ? kgTextToGrams(kg) : null;
   const g = wantG ?? l.minOrderG;
   const item = itemYen(l.pricePerKg, g);
-  // 販売確定後のキャンセルの回数（6章）。注文の機能を作るときに、実際の回数を数えるようにする
-  const cancelCount = 0;
+  // 農家さんの、販売確定後のキャンセルの回数（6章）
+  const cancelCount = await producerCancelCount(l.producer.id);
 
   return (
     <>

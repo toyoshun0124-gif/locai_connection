@@ -1,6 +1,7 @@
 "use client";
 // 出品の入力フォーム（入力した内容は、エラーが出ても消えない）
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { createListing, type ListingFormState } from "./actions";
 
 export type ListingValues = {
@@ -136,7 +137,11 @@ export function ListingForm({
             お店が取りに来る
           </label>
           {errorText("receive")}
-        </fieldset>
+          {/* 住所が無くて断られたときは、プロフィールへの道を出す */}
+            {state.errors?.receive?.includes("住所") && (
+              <Link href="/mypage/profile" className="text-sm text-green-800 underline">プロフィールで住所を登録する</Link>
+            )}
+          </fieldset>
 
         <label className="flex flex-col gap-1">
           <span className={label}>回答期限</span>

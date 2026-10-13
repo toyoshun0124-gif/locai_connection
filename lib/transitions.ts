@@ -4,9 +4,9 @@ import "server-only";
 import type { OrderStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { itemYen } from "@/lib/price";
-import { formatKg } from "@/lib/units";
+import { dateToYmd, formatKg, todayInJapan } from "@/lib/units";
 
-export type Action = "sell" | "reduce" | "decline" | "accept" | "cancel";
+export type Action = "sell" | "reduce" | "decline" | "accept" | "cancel" | "producerCancel";
 
 // 操作ごとに「誰が」「どの状態から」「どの状態へ」動かせるか
 const RULES: Record<Action, { by: "PRODUCER" | "BUYER"; from: OrderStatus[]; to: OrderStatus; needInTime: boolean }> = {
@@ -14,7 +14,8 @@ const RULES: Record<Action, { by: "PRODUCER" | "BUYER"; from: OrderStatus[]; to:
   reduce: { by: "PRODUCER", from: ["PENDING"], to: "CHANGE_PROPOSED", needInTime: true }, // 量を減らして返事
   decline: { by: "PRODUCER", from: ["PENDING", "CHANGE_PROPOSED"], to: "DECLINED", needInTime: false }, // 見送り
   accept: { by: "BUYER", from: ["CHANGE_PROPOSED"], to: "CONFIRMED", needInTime: true }, // 減らした量でOK
-  cancel: { by: "BUYER", from: ["PENDING", "CHANGE_PROPOSED"], to: "CANCELLED", needInTime: false }, // 取消
+  cancel: { by: "BUYER", from: ["PENDING", "CHANGE_PROPOSED", "CONFIRMED"], to: "CANCELLED", needInTime: false }, // お店の取消（販売確定のあとも）
+  producerCancel: { by: "PRODUCER", from: ["CONFIRMED"], to: "CANCELLED", needInTime: false }, // 農家さんの、販売確定のあとの取消
 };
 
 export class TransitionError extends Error {}
@@ -62,6 +63,19 @@ export async function transitionOrder(params: {
       await tx.order.update({
         where: { id: order.id },
         data: { status: rule.to, requestedG: order.quantityG, quantityG: g, itemYen: item, totalYen: item + order.shippingYen },
+      });
+      return false;
+    }
+    if (rule.to === "CANCELLED") {
+      const afterConfirm = order.status === "CONFIRMED";
+      // 販売確定のあとの取消は、出荷日の前日まで（日本時間）
+      if (afterConfirm && todayInJapan() >= dateToYmd(order.shipDate)) {
+        throw new TransitionError("出荷日の当日からは取り消せません（出荷日の前日まで取り消せます）");
+      }
+      // 取り消した人を記録する。販売確定のあとなら、その人のキャンセルの回数に数える
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED", cancelledBy: rule.by, cancelledAfterConfirm: afterConfirm },
       });
       return false;
     }
