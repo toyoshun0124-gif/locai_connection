@@ -13,7 +13,7 @@ import { AppHeader, WrongRoleNotice } from "../app-header";
 const SORTS = {
   new: "新しい順",
   cheap: "値段が安い順",
-  early: "届くのが早い順",
+  early: "出荷が早い順",
 } as const;
 
 // 探す条件のチェック：食材名は必須（1〜50文字）、量と並び替えは任意
