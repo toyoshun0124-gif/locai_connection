@@ -1,12 +1,13 @@
 // 購入者（三上さんなど）のログイン後の画面：食材名で探して、一覧から選ぶ（4章A②④）
 import { Suspense } from "react";
+import Link from "next/link";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { formatYen, totalWithShippingYen } from "@/lib/price";
 import { canOrder, remainingGrams } from "@/lib/stock";
-import { addDays, dateToYmd, formatKg, formatYmd, kgTextToGrams, todayInJapan } from "@/lib/units";
+import { addDays, dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
@@ -155,8 +156,11 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
             // 送料込みの金額：量を入れていればその量、なければいちばん少ない注文量で計算する
             const g = wantG ?? l.minOrderG;
             return (
-              <li key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
-                <div className="flex items-start justify-between gap-3">
+              <li key={l.id}>
+                <Link
+                  href={`/listings/${l.id}?${new URLSearchParams({ q: keyword, sort, ...(wantG !== null ? { kg: gramsToKgText(wantG) } : {}) })}`}
+                  className="flex items-start justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800"
+                >
                   <div className="min-w-0">
                     {/* 1. 食材名 */}
                     <p className="truncate text-lg font-bold text-stone-900">{l.name}</p>
@@ -184,7 +188,7 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
                     )}
                     {l.pickup && <p className="text-xs text-stone-600">取りに行けば送料なし</p>}
                   </div>
-                </div>
+                </Link>
               </li>
             );
           })}
