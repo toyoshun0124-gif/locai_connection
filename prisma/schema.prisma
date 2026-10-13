@@ -31,6 +31,20 @@ enum Prefecture {
   WAKAYAMA
 }
 
+// プロフィール（登録はスキップできる。マイページからいつでも登録・修正できる）
+model Profile {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      String? // 市町村（例：南丹市）。公開する
+  shopKind  String? // お店の種類（例：小料理屋）。購入者だけ。公開する
+  items     String? // 取り扱い食材（例：賀茂茄子）。生産者だけ。公開する
+  policy    String? // 方針・こだわり。公開する
+  address   String? // 住所。売買が決まった相手にだけ見せる（ほかの人には絶対に見せない）
+  updatedAt DateTime @updatedAt
+
+  @@map("profile")
+}
+
 // ===== ここから下は、ログインの仕組み（Better Auth）が使う表 =====
 
 model User {
@@ -46,6 +60,7 @@ model User {
   updatedAt     DateTime    @updatedAt
   sessions      Session[]
   accounts      Account[]
+  profile       Profile?
 
   @@map("user")
 }

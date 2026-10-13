@@ -49,7 +49,8 @@ export default function LoginPage() {
       );
       return;
     }
-    router.push("/");
+    // 新規登録の直後はプロフィール画面へ（スキップもできる）
+    router.push(mode === "signup" ? "/mypage/profile?welcome=1" : "/");
     router.refresh();
   }
 
