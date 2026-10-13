@@ -1,19 +1,37 @@
-// 購入者（三上さんなど）のログイン後の画面：食材名で探す（4章A②）
+// 購入者（三上さんなど）のログイン後の画面：食材名で探して、一覧から選ぶ（4章A②④）
 import { Suspense } from "react";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { PREFECTURES } from "@/lib/options";
+import { formatYen, totalWithShippingYen } from "@/lib/price";
+import { canOrder, remainingGrams } from "@/lib/stock";
+import { addDays, dateToYmd, formatKg, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
 
-// 食材名のチェック：前後の空白を除いて1〜50文字
-const keywordSchema = z.string().trim().min(1).max(50);
+// 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
+const SORTS = {
+  new: "新しい順",
+  cheap: "値段が安い順",
+  early: "届くのが早い順",
+} as const;
+
+// 探す条件のチェック：食材名は必須（1〜50文字）、量と並び替えは任意
+const searchSchema = z.object({
+  q: z.string().trim().min(1).max(50),
+  kg: z.string().trim().max(10).optional(),
+  sort: z.enum(["new", "cheap", "early"]).optional(),
+});
 
 export default function BuyerPage({ searchParams }: PageProps<"/buyer">) {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-6">
-      <Suspense fallback={<p>読み込み中…</p>}>
-        <BuyerHome searchParams={searchParams} />
-      </Suspense>
-    </main>
+    <div className="flex flex-1 flex-col bg-[#f6f1e7]">
+      <main className="mx-auto w-full max-w-2xl px-4 py-6">
+        <Suspense fallback={<p>読み込み中…</p>}>
+          <BuyerHome searchParams={searchParams} />
+        </Suspense>
+      </main>
+    </div>
   );
 }
 
@@ -29,48 +47,145 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
     );
   }
 
-  const { q } = await searchParams;
-  const raw = typeof q === "string" ? q : undefined;
-  const keyword = raw === undefined ? undefined : keywordSchema.safeParse(raw);
+  const params = await searchParams;
+  const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+  const raw = { q: str(params.q), kg: str(params.kg), sort: str(params.sort) };
+  const searched = raw.q !== undefined;
+  const parsed = searched ? searchSchema.safeParse(raw) : null;
+
+  // 量は任意。入っていれば g にする（形が違えばエラーを出す）
+  const wantG = parsed?.success && parsed.data.kg ? kgTextToGrams(parsed.data.kg) : null;
+  const kgError = parsed?.success && parsed.data.kg && wantG === null;
+
+  const input =
+    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
 
   return (
     <>
       <AppHeader user={user} />
 
-      {/* 食材を探す（食材名だけ必須） */}
+      {/* 食材を探す（食材名だけ必須。量・並び替えは任意の絞り込み） */}
       <section className="mt-6">
-        <h1 className="text-xl font-bold">野菜を探す</h1>
-        <p className="text-sm text-green-700">関西の農家さんの出品から探せます</p>
-        <form action="/buyer" method="get" className="mt-3 flex gap-2">
-          <input
-            name="q"
-            defaultValue={raw ?? ""}
-            maxLength={50}
-            required
-            placeholder="食材名（例：万願寺唐辛子）"
-            className="min-w-0 flex-1 rounded border border-zinc-300 px-3 py-2"
-          />
-          <button type="submit" className="shrink-0 rounded bg-green-700 px-4 py-2 text-white">
-            探す
-          </button>
+        <h1 className="text-xl font-bold text-green-900">野菜を探す</h1>
+        <p className="text-sm text-stone-600">関西の農家さんの出品から探せます</p>
+        <form action="/buyer" method="get" className="mt-3 flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+          <div className="flex gap-2">
+            <input name="q" defaultValue={raw.q ?? ""} maxLength={50} required placeholder="食材名（例：賀茂茄子）" className={`${input} min-w-0 flex-1`} />
+            <button type="submit" className="shrink-0 rounded-full bg-green-800 px-5 py-2 text-white hover:bg-green-900">探す</button>
+          </div>
+          {parsed && !parsed.success && <p className="text-sm text-red-600">食材名を入力してください（50文字まで）</p>}
+          <details open={Boolean(raw.kg || raw.sort)}>
+            <summary className="cursor-pointer text-sm text-green-800">絞り込み・並び替え（任意）</summary>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-stone-700">ほしい量（kg）</span>
+                <input name="kg" inputMode="decimal" defaultValue={raw.kg ?? ""} placeholder="例：3" className={input} />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-stone-700">並び替え</span>
+                <select name="sort" defaultValue={raw.sort ?? "new"} className={input}>
+                  {Object.entries(SORTS).map(([k, label]) => (
+                    <option key={k} value={k}>{label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {kgError && <p className="mt-1 text-sm text-red-600">量は 0.1kg 単位の数字で入力してください（例：1.5）</p>}
+          </details>
         </form>
-        {keyword && !keyword.success && (
-          <p className="mt-1 text-sm text-red-600">食材名を入力してください（50文字まで）</p>
-        )}
-        {keyword?.success && (
-          <p className="mt-4 rounded bg-zinc-50 p-4 text-zinc-600">
-            「{keyword.data}」の出品は、まだありません。（出品の一覧は、次のステップで作ります）
-          </p>
-        )}
       </section>
+
+      {parsed?.success && !kgError && (
+        <Results keyword={parsed.data.q} wantG={wantG} sort={parsed.data.sort ?? "new"} />
+      )}
 
       {/* 自分の注文（4章A⑤） */}
       <section className="mt-8">
         <h2 className="text-lg font-bold">自分の注文</h2>
-        <p className="mt-2 rounded bg-zinc-50 p-4 text-zinc-600">
+        <p className="mt-2 rounded bg-white/60 p-4 text-stone-600">
           まだ申し込みはありません。（注文の一覧は、申し込みの機能と一緒に作ります）
         </p>
       </section>
     </>
+  );
+}
+
+// 探した結果の一覧（食材名・量・産地・値段）
+async function Results({ keyword, wantG, sort }: { keyword: string; wantG: number | null; sort: keyof typeof SORTS }) {
+  // 申し込めるのは、明日以降に出荷できる日がある、公開中の出品
+  const tomorrow = addDays(todayInJapan(), 1);
+  const rows = await prisma.listing.findMany({
+    where: { status: "OPEN", name: { contains: keyword, mode: "insensitive" } },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    // 一覧に必要な項目だけ取り出す（農家さんの住所などは読まない）
+    select: {
+      id: true, name: true, city: true, pricePerKg: true, quantityG: true, minOrderG: true, unitG: true,
+      delivery: true, pickup: true, shippingYen: true, shipDates: true, createdAt: true,
+      producer: { select: { prefecture: true } },
+    },
+  });
+
+  const items = rows
+    .map((l) => {
+      const futureDates = l.shipDates.map(dateToYmd).filter((d) => d >= tomorrow);
+      return { ...l, futureDates, remainingG: remainingGrams(l) };
+    })
+    // 出荷できる日が残っていて、残りの量がある出品だけ
+    .filter((l) => l.futureDates.length > 0 && l.remainingG >= l.minOrderG)
+    // 量を入れたときは、その量で申し込める出品だけ（6章ルール6：条件に合えば、新しい農家さんも表示する）
+    .filter((l) => wantG === null || canOrder(l, l.remainingG, wantG));
+
+  // 並び替え（アプリの決まりで決める）
+  if (sort === "cheap") items.sort((a, b) => a.pricePerKg - b.pricePerKg || b.createdAt.getTime() - a.createdAt.getTime());
+  if (sort === "early") items.sort((a, b) => a.futureDates[0].localeCompare(b.futureDates[0]) || b.createdAt.getTime() - a.createdAt.getTime());
+
+  return (
+    <section className="mt-6">
+      <p className="text-sm text-stone-600">
+        「{keyword}」{wantG !== null && `を ${formatKg(wantG)}`}：{items.length}件
+      </p>
+      {items.length === 0 ? (
+        <p className="mt-2 rounded-xl bg-white p-4 text-stone-600">
+          条件に合う出品が見つかりませんでした。{wantG !== null && "ほしい量を変えると見つかるかもしれません。"}
+        </p>
+      ) : (
+        <ul className="mt-2 flex flex-col gap-2">
+          {items.map((l) => {
+            // 送料込みの金額：量を入れていればその量、なければいちばん少ない注文量で計算する
+            const g = wantG ?? l.minOrderG;
+            return (
+              <li key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    {/* 1. 食材名 */}
+                    <p className="truncate text-lg font-bold text-stone-900">{l.name}</p>
+                    {/* 3. 産地 */}
+                    <p className="text-sm text-stone-600">{PREFECTURES[l.producer.prefecture]}{l.city}</p>
+                    {/* 2. 量（いま申し込める残りの量） */}
+                    <p className="mt-1 text-sm text-stone-800">
+                      残り <span className="font-bold">{formatKg(l.remainingG)}</span>
+                      <span className="text-stone-500">（{formatKg(l.minOrderG)}から{formatKg(l.unitG)}ずつ）</span>
+                    </p>
+                  </div>
+                  {/* 4. 値段（1kgあたりを大きく、送料込みはその下に） */}
+                  <div className="shrink-0 text-right">
+                    <p className="text-2xl font-bold text-red-700">
+                      {l.pricePerKg.toLocaleString("ja-JP")}<span className="text-sm">円/kg</span>
+                    </p>
+                    {l.delivery && (
+                      <p className="text-xs text-stone-600">
+                        {formatKg(g)}{wantG === null ? "から" : "で"}・送料込み {formatYen(totalWithShippingYen(l.pricePerKg, g, l.shippingYen))}{wantG === null && "〜"}
+                      </p>
+                    )}
+                    {l.pickup && <p className="text-xs text-stone-600">取りに行けば送料なし</p>}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
