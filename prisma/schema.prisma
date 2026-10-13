@@ -45,6 +45,37 @@ model Profile {
   @@map("profile")
 }
 
+// 出品の状態：公開中（申し込める）／終了（坂田さんが終わりにした）
+enum ListingStatus {
+  OPEN
+  CLOSED
+}
+
+// 出品（坂田さんが売りたい野菜）。量は g、金額は円の整数で持つ（小数で計算しない）
+model Listing {
+  id              String        @id @default(cuid())
+  producerId      String
+  producer        User          @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  name            String // 商品名（例：賀茂茄子）
+  city            String // 産地の市町村（府県は登録時のものを使う）
+  pricePerKg      Int // 1kgあたりの値段（円）
+  quantityG       Int // 出品した量（g）
+  minOrderG       Int // いちばん少ない注文量（g）
+  unitG           Int // 注文の単位（g）
+  delivery        Boolean // 坂田さんが届けられる
+  pickup          Boolean // お店が取りに来られる
+  shippingYen     Int // 送料（円）。届けるときだけ使う
+  replyDays       Int // 回答期限：申し込みから何日以内に返事するか（1〜3）
+  shipDates       DateTime[]    @db.Date // 出荷できる日（1日以上）
+  status          ListingStatus @default(OPEN)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([producerId, createdAt])
+  @@index([status, name])
+  @@map("listing")
+}
+
 // ===== ここから下は、ログインの仕組み（Better Auth）が使う表 =====
 
 model User {
@@ -61,6 +92,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   profile       Profile?
+  listings      Listing[]
 
   @@map("user")
 }
