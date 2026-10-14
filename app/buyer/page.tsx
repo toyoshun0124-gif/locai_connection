@@ -250,7 +250,12 @@ async function Results({ keyword, filters, sort }: { keyword: string; filters: F
                         {formatKg(g)}{wantG === null ? "から" : "で"}・送料込み {formatYen(totalWithShippingYen(l.pricePerKg, g, l.shippingYen))}{wantG === null && "〜"}
                       </p>
                     )}
-                    {l.pickup && filters.receive !== "DELIVERY" && <p className="text-xs text-stone-600">取りに行けば送料なし</p>}
+                    {/* 取りに行く場合の合計（送料なし）も出す。文字の大きさ・色は送料込みと同じ */}
+                    {l.pickup && filters.receive !== "DELIVERY" && (
+                      <p className="text-xs text-stone-600">
+                        {formatKg(g)}{wantG === null ? "から" : "で"}・取りに行く場合 {formatYen(totalWithShippingYen(l.pricePerKg, g, 0))}{wantG === null && "〜"}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </li>
