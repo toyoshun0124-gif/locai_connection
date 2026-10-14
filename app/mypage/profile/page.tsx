@@ -8,7 +8,7 @@ import { ProfileForm } from "./profile-form";
 
 export default function ProfilePage({ searchParams }: PageProps<"/mypage/profile">) {
   return (
-    <div className="flex flex-1 flex-col bg-[#f6f1e7]">
+    <div className="flex flex-1 flex-col">
       <main className="mx-auto w-full max-w-md px-4 py-6">
         <Suspense fallback={<p>読み込み中…</p>}>
           <ProfileContent searchParams={searchParams} />

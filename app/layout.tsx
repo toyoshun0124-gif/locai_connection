@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { VeggieBackground } from "./veggie-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* いちばん後ろに、京野菜のイラスト（全部の画面に出る） */}
+        <VeggieBackground />
+        {/* 各画面の中身は、イラストの上に出す */}
+        <div className="relative z-10 flex flex-1 flex-col">{children}</div>
+      </body>
     </html>
   );
 }

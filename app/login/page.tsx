@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   return (
     // 背景は生成り色（うすいベージュ）
-    <div className="flex flex-1 flex-col bg-[#f6f1e7]">
+    <div className="flex flex-1 flex-col">
       <main className="mx-auto w-full max-w-md px-4 py-10">
         {/* アプリの名前と、関西限定であること */}
         <div className="text-center">
