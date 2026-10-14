@@ -118,7 +118,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
       {/* サポートの案内（いつも画面のいちばん下に置く） */}
       <section className="mt-6 rounded-2xl border border-stone-300 bg-white/70 p-4 text-sm text-stone-700">
         <h2 className="font-bold">サポートに連絡</h2>
-        <p className="mt-1">しつこい連絡など、取引で困ったことがあれば、運営に連絡してください。</p>
+        <p className="mt-1">取引で困ったことがあれば、運営に連絡してください。</p>
         <p className="mt-1">
           メール：<a href={`mailto:${SUPPORT_EMAIL}`} className="text-green-800 underline">{SUPPORT_EMAIL}</a>
           <span className="ml-1 text-xs text-stone-500">（デモ用の作り物の連絡先です）</span>
