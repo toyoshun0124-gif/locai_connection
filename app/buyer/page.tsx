@@ -91,6 +91,16 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
     <>
       <AppHeader user={user} />
 
+      {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
+      <section className="mt-5 rounded-xl bg-white/80 p-3 text-sm text-stone-700 ring-1 ring-stone-200">
+        <p className="font-bold text-green-900">このアプリの使い方</p>
+        <ol className="mt-1 flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:gap-x-2">
+          <li>① 野菜を探す</li>
+          <li><span className="sm:inline hidden">→ </span>② 申し込む（農家さんが返事）</li>
+          <li><span className="sm:inline hidden">→ </span>③ 買えなかったら、<span className="font-medium text-green-900">AIが代わりの野菜を提案</span></li>
+        </ol>
+      </section>
+
       {/* 食材を探す（食材名だけ必須。量・並び替えは任意の絞り込み） */}
       <section className="mt-6">
         <h1 className="text-xl font-bold text-green-900">野菜を探す</h1>
@@ -157,6 +167,14 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
         <Link href="/buyer/loss" className="mt-2 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
           <span className="text-lg font-bold">ロスの記録</span>
           <span className="text-sm text-green-800">余った量を記録する →</span>
+        </Link>
+        {/* AI の提案への入口（探しても見つからないときに使う） */}
+        <Link href="/buyer/alternatives" className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
+          <span className="min-w-0">
+            <span className="block text-lg font-bold">代わりの野菜を探す（AIの提案）</span>
+            <span className="block text-xs text-stone-500">探しても見つからないときに、関西の代わりの野菜をAIが提案します</span>
+          </span>
+          <span className="shrink-0 text-sm text-green-800">→</span>
         </Link>
       </section>
     </>
