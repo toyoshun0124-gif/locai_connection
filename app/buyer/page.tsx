@@ -10,6 +10,7 @@ import { canOrder, expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { isOrderableShipDate } from "@/lib/order";
 import { dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
+import { BUDGETS, RECEIVE_FILTERS, matchesReceiveAndBudget, shipDatesForUseDate, type BudgetKey } from "@/lib/search";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
 const SORTS = {
@@ -18,12 +19,30 @@ const SORTS = {
   early: "出荷が早い順",
 } as const;
 
-// 探す条件のチェック：食材名は必須（1〜50文字）、量と並び替えは任意
+// 探す条件のチェック：食材名は必須（1〜50文字）。量・使用日・予算・受け取り条件・並び替えは任意
 const searchSchema = z.object({
   q: z.string().trim().min(1).max(50),
   kg: z.string().trim().max(10).optional(),
+  useDate: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/).optional(),
+  budget: z.enum(["", ...(Object.keys(BUDGETS) as BudgetKey[])]).optional(),
+  receive: z.enum(["", "DELIVERY", "PICKUP"]).optional(),
   sort: z.enum(["new", "cheap", "early"]).optional(),
 });
+
+// 絞り込みの条件（一覧と、詳細へのリンクで使う）
+type Filters = { wantG: number | null; useDate: string | null; budget: BudgetKey | null; receive: "DELIVERY" | "PICKUP" | null };
+
+// 絞り込みの条件を、アドレスの「?」のあとに付ける形にする（空のものは付けない）
+function filterParams(keyword: string, sort: string, f: Filters) {
+  return new URLSearchParams({
+    q: keyword,
+    sort,
+    ...(f.wantG !== null ? { kg: gramsToKgText(f.wantG) } : {}),
+    ...(f.useDate ? { useDate: f.useDate } : {}),
+    ...(f.budget ? { budget: f.budget } : {}),
+    ...(f.receive ? { receive: f.receive } : {}),
+  });
+}
 
 export default function BuyerPage({ searchParams }: PageProps<"/buyer">) {
   return (
@@ -51,13 +70,19 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 
   const params = await searchParams;
   const str = (v: unknown) => (typeof v === "string" ? v : undefined);
-  const raw = { q: str(params.q), kg: str(params.kg), sort: str(params.sort) };
+  const raw = { q: str(params.q), kg: str(params.kg), useDate: str(params.useDate), budget: str(params.budget), receive: str(params.receive), sort: str(params.sort) };
   const searched = raw.q !== undefined;
   const parsed = searched ? searchSchema.safeParse(raw) : null;
 
   // 量は任意。入っていれば g にする（形が違えばエラーを出す）
   const wantG = parsed?.success && parsed.data.kg ? kgTextToGrams(parsed.data.kg) : null;
   const kgError = parsed?.success && parsed.data.kg && wantG === null;
+  const filters: Filters = {
+    wantG,
+    useDate: parsed?.success && parsed.data.useDate ? parsed.data.useDate : null,
+    budget: parsed?.success && parsed.data.budget ? parsed.data.budget : null,
+    receive: parsed?.success && parsed.data.receive ? parsed.data.receive : null,
+  };
 
   const input =
     "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
@@ -76,12 +101,33 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
             <button type="submit" className="shrink-0 rounded-full bg-green-800 px-5 py-2 text-white hover:bg-green-900">探す</button>
           </div>
           {parsed && !parsed.success && <p className="text-sm text-red-600">食材名を入力してください（50文字まで）</p>}
-          <details open={Boolean(raw.kg || raw.sort)}>
+          <details open={Boolean(raw.kg || raw.useDate || raw.budget || raw.receive || raw.sort)}>
             <summary className="cursor-pointer text-sm text-green-800">絞り込み・並び替え（任意）</summary>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-stone-700">ほしい量（kg）</span>
                 <input name="kg" inputMode="decimal" defaultValue={raw.kg ?? ""} placeholder="例：3" className={input} />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-stone-700">使用日</span>
+                <input name="useDate" type="date" defaultValue={raw.useDate ?? ""} className={input} />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-stone-700">予算（送料込み）</span>
+                <select name="budget" defaultValue={raw.budget ?? ""} className={input}>
+                  <option value="">指定しない</option>
+                  {(Object.keys(BUDGETS) as BudgetKey[]).map((k) => (
+                    <option key={k} value={k}>{BUDGETS[k].label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-stone-700">受け取り条件</span>
+                <select name="receive" defaultValue={raw.receive ?? ""} className={input}>
+                  <option value="">指定しない</option>
+                  <option value="DELIVERY">{RECEIVE_FILTERS.DELIVERY}</option>
+                  <option value="PICKUP">{RECEIVE_FILTERS.PICKUP}</option>
+                </select>
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-stone-700">並び替え</span>
@@ -93,12 +139,13 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
               </label>
             </div>
             {kgError && <p className="mt-1 text-sm text-red-600">量は 0.1kg 単位の数字で入力してください（例：1.5）</p>}
+            <p className="mt-1 text-xs text-stone-500">予算は「野菜の代金＋送料」で、ほしい量（入れていなければ、いちばん少ない注文量）で計算します。</p>
           </details>
         </form>
       </section>
 
       {parsed?.success && !kgError && (
-        <Results keyword={parsed.data.q} wantG={wantG} sort={parsed.data.sort ?? "new"} />
+        <Results keyword={parsed.data.q} filters={filters} sort={parsed.data.sort ?? "new"} />
       )}
 
       {/* 自分の注文（4章A⑤） */}
@@ -117,7 +164,8 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 }
 
 // 探した結果の一覧（食材名・量・産地・値段・出荷できる日）
-async function Results({ keyword, wantG, sort }: { keyword: string; wantG: number | null; sort: keyof typeof SORTS }) {
+async function Results({ keyword, filters, sort }: { keyword: string; filters: Filters; sort: keyof typeof SORTS }) {
+  const { wantG } = filters;
   // 申し込めるのは、出荷日の4日前までの日がある、公開中の出品
   const today = todayInJapan();
   await expireOverdueOrders();
@@ -136,13 +184,16 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
   const remaining = await remainingGramsMap(rows);
   const items = rows
     .map((l) => {
-      const futureDates = l.shipDates.map(dateToYmd).filter((d) => isOrderableShipDate(d, today));
+      // 申し込める出荷日のうち、使用日を入れていれば、それに間に合う日だけ
+      const futureDates = shipDatesForUseDate(l.shipDates.map(dateToYmd).filter((d) => isOrderableShipDate(d, today)), filters.useDate);
       return { ...l, futureDates, remainingG: remaining.get(l.id) ?? 0 };
     })
     // 申し込める出荷日が残っていて、残りの量がある出品だけ
     .filter((l) => l.futureDates.length > 0 && l.remainingG >= l.minOrderG)
     // 量を入れたときは、その量で申し込める出品だけ（6章ルール6：条件に合えば、新しい農家さんも表示する）
-    .filter((l) => wantG === null || canOrder(l, l.remainingG, wantG));
+    .filter((l) => wantG === null || canOrder(l, l.remainingG, wantG))
+    // 受け取り条件と予算（送料込み）に合う出品だけ
+    .filter((l) => matchesReceiveAndBudget(l, wantG ?? l.minOrderG, filters.receive, filters.budget));
 
   // 並び替え（アプリの決まりで決める）
   if (sort === "cheap") items.sort((a, b) => a.pricePerKg - b.pricePerKg || b.createdAt.getTime() - a.createdAt.getTime());
@@ -155,7 +206,7 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
       </p>
       {items.length === 0 ? (
         <div className="mt-2 rounded-xl bg-white p-4 text-stone-600">
-          <p>条件に合う出品が見つかりませんでした。{wantG !== null && "ほしい量を変えると見つかるかもしれません。"}</p>
+          <p>条件に合う出品が見つかりませんでした。{(wantG !== null || filters.useDate || filters.budget || filters.receive) && "絞り込みの条件を変えると見つかるかもしれません。"}</p>
           <Link
             href={`/buyer/alternatives?${new URLSearchParams({ item: keyword, ...(wantG !== null ? { kg: gramsToKgText(wantG) } : {}) })}`}
             className="mt-2 inline-block rounded-full bg-green-800 px-4 py-2 text-sm text-white hover:bg-green-900"
@@ -171,7 +222,7 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
             return (
               <li key={l.id}>
                 <Link
-                  href={`/listings/${l.id}?${new URLSearchParams({ q: keyword, sort, ...(wantG !== null ? { kg: gramsToKgText(wantG) } : {}) })}`}
+                  href={`/listings/${l.id}?${filterParams(keyword, sort, filters)}`}
                   className="flex items-start justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800"
                 >
                   <div className="min-w-0">
@@ -194,12 +245,12 @@ async function Results({ keyword, wantG, sort }: { keyword: string; wantG: numbe
                     <p className="text-2xl font-bold text-red-700">
                       {l.pricePerKg.toLocaleString("ja-JP")}<span className="text-sm">円/kg</span>
                     </p>
-                    {l.delivery && (
+                    {l.delivery && filters.receive !== "PICKUP" && (
                       <p className="text-xs text-stone-600">
                         {formatKg(g)}{wantG === null ? "から" : "で"}・送料込み {formatYen(totalWithShippingYen(l.pricePerKg, g, l.shippingYen))}{wantG === null && "〜"}
                       </p>
                     )}
-                    {l.pickup && <p className="text-xs text-stone-600">取りに行けば送料なし</p>}
+                    {l.pickup && filters.receive !== "DELIVERY" && <p className="text-xs text-stone-600">取りに行けば送料なし</p>}
                   </div>
                 </Link>
               </li>

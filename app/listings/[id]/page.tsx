@@ -43,12 +43,17 @@ async function ListingDetail({
   }
 
   const { id } = await params;
-  const { kg, q, sort } = await searchParams;
-  // 「一覧に戻る」で、さっきの検索結果に戻れるようにする
+  const sp = await searchParams;
+  const { kg } = sp;
+  // 「一覧に戻る」で、さっきの検索結果（絞り込みも）に戻れるようにする
   const backParams = new URLSearchParams();
-  if (typeof q === "string") backParams.set("q", q);
-  if (typeof kg === "string") backParams.set("kg", kg);
-  if (typeof sort === "string") backParams.set("sort", sort);
+  for (const key of ["q", "kg", "useDate", "budget", "receive", "sort"]) {
+    const v = sp[key];
+    if (typeof v === "string") backParams.set(key, v);
+  }
+  // 絞り込みで入れた使用日・受け取り条件は、申し込みのフォームにも最初から入れる
+  const initialUseDate = typeof sp.useDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.useDate) ? sp.useDate : "";
+  const initialReceive = sp.receive === "DELIVERY" || sp.receive === "PICKUP" ? sp.receive : "";
   const backHref = backParams.size > 0 ? `/buyer?${backParams}` : "/buyer";
   // 公開中の出品だけ。見せてよい項目だけを取り出す（農家さんの住所・メールは読まない）
   const l = await prisma.listing.findFirst({
@@ -181,6 +186,8 @@ async function ListingDetail({
             remainingG={remainingG}
             orderableDates={orderableDates}
             initialKg={wantG !== null ? gramsToKgText(wantG) : ""}
+            initialUseDate={initialUseDate}
+            initialReceive={initialReceive}
           />
         )}
       </section>

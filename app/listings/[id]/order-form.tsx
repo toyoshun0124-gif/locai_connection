@@ -21,16 +21,18 @@ type Props = {
   remainingG: number;
   orderableDates: { ymd: string; label: string }[];
   initialKg: string;
+  initialUseDate: string;
+  initialReceive: "" | "DELIVERY" | "PICKUP";
 };
 
-export function OrderForm({ listing, remainingG, orderableDates, initialKg }: Props) {
+export function OrderForm({ listing, remainingG, orderableDates, initialKg, initialUseDate, initialReceive }: Props) {
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [shipDate, setShipDate] = useState("");
-  const [useDate, setUseDate] = useState("");
+  const [useDate, setUseDate] = useState(initialUseDate);
   const [quantity, setQuantity] = useState(initialKg);
-  // 受け取り条件が1つしかない出品は、最初からそれを選んでおく
+  // 受け取り条件が1つしかない出品は、最初からそれを選んでおく。絞り込みで選んでいれば、それを入れる
   const [receive, setReceive] = useState<"" | "DELIVERY" | "PICKUP">(
-    listing.delivery && !listing.pickup ? "DELIVERY" : !listing.delivery && listing.pickup ? "PICKUP" : "",
+    listing.delivery && !listing.pickup ? "DELIVERY" : !listing.delivery && listing.pickup ? "PICKUP" : initialReceive,
   );
   const [wantAiHelp, setWantAiHelp] = useState(false);
   const [dishName, setDishName] = useState("");
