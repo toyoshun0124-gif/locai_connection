@@ -10,6 +10,7 @@ import { RECEIVE_LABELS } from "@/lib/order";
 import { formatYen } from "@/lib/price";
 import { expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { ProducerButtons, ProducerCancelButton } from "../orders/respond-buttons";
+import { ListingControls } from "./listing-controls";
 import { MessageLink } from "../orders/message-link";
 import { messageSummary } from "@/lib/messages";
 import { STATUS_LABELS } from "@/lib/order";
@@ -185,13 +186,24 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
                   </span>
                 </div>
                 <p className="text-sm text-stone-700">
-                  {formatKg(l.quantityG)}・{l.pricePerKg.toLocaleString()}円/kg・{formatKg(l.minOrderG)}から{formatKg(l.unitG)}ずつ
+                  出品 {formatKg(l.quantityG)}・<span className="font-bold">残り {formatKg(Math.max(remaining.get(l.id) ?? 0, 0))}</span>（申し込める量）
+                </p>
+                <p className="text-sm text-stone-700">
+                  {l.pricePerKg.toLocaleString()}円/kg・{formatKg(l.minOrderG)}から{formatKg(l.unitG)}ずつ
                 </p>
                 <p className="text-sm text-stone-500">出荷できる日：{l.shipDates.map((d) => formatYmd(dateToYmd(d))).join("、")}</p>
                 <p className="text-sm text-stone-500">
                   {[l.delivery && `届ける（送料 ${l.shippingYen.toLocaleString()}円）`, l.pickup && "取りに来てもらう"].filter(Boolean).join("／")}
                   ・回答期限 {l.replyDays}日以内
                 </p>
+                {/* 売れ残りを市場に出すとき：量を減らす／出品を終わりにする（4章B⑤） */}
+                {l.status === "OPEN" && (
+                  <ListingControls
+                    listingId={l.id}
+                    remainingKg={gramsToKgText(Math.max(remaining.get(l.id) ?? 0, 0))}
+                    holdCount={orders.filter((o) => o.listingId === l.id && (o.status === "PENDING" || o.status === "CHANGE_PROPOSED")).length}
+                  />
+                )}
               </li>
             ))}
           </ul>
