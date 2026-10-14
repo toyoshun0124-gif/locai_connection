@@ -18,11 +18,13 @@ import { AppHeader, WrongRoleNotice } from "../app-header";
 
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-6">
-      <Suspense fallback={<p>読み込み中…</p>}>
-        <ProducerHome searchParams={searchParams} />
-      </Suspense>
-    </main>
+    <div className="flex flex-1 flex-col bg-[#f6f1e7]">
+      <main className="mx-auto w-full max-w-2xl px-4 py-6">
+        <Suspense fallback={<p>読み込み中…</p>}>
+          <ProducerHome searchParams={searchParams} />
+        </Suspense>
+      </main>
+    </div>
   );
 }
 
@@ -88,16 +90,16 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
 
       {/* 届いた申し込み（4章B④：申し込んだ順に並べる） */}
       <section className="mt-6">
-        <h1 className="text-xl font-bold">届いた申し込み</h1>
+        <h1 className="text-xl font-bold text-green-900">届いた申し込み</h1>
         {listingsWithOrders.length === 0 ? (
-          <p className="mt-2 rounded bg-zinc-50 p-4 text-zinc-600">まだ申し込みはありません。</p>
+          <p className="mt-2 rounded-xl bg-white p-4 text-stone-600 shadow-sm ring-1 ring-stone-200">まだ申し込みはありません。</p>
         ) : (
           listingsWithOrders.map((l) => {
             const mine = orders.filter((o) => o.listingId === l.id);
             const heldG = mine.filter((o) => o.status !== "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             const confirmedG = mine.filter((o) => o.status === "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             return (
-              <div key={l.id} className="mt-3 rounded-xl border border-stone-200 bg-white p-4">
+              <div key={l.id} className="mt-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
                 <p className="font-bold">{l.name}<span className="ml-2 text-sm font-normal text-stone-500">出品 {formatKg(l.quantityG)}</span></p>
                 <ol className="mt-2 flex flex-col gap-3">
                   {mine.map((o, i) => {
@@ -150,10 +152,10 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
 
       {finished.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-bold">終わった申し込み</h2>
+          <h2 className="text-lg font-bold text-green-900">終わった申し込み</h2>
           <ul className="mt-2 flex flex-col gap-2">
             {finished.map((o) => (
-              <li key={o.id} className="rounded-xl border border-stone-200 bg-white p-3">
+              <li key={o.id} className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-stone-200">
                 <p className="text-sm">
                   {o.listing.name}・{o.buyer.name}・{formatKg(o.quantityG)}
                   <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">{STATUS_LABELS[o.status]}</span>
@@ -168,17 +170,17 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
       {/* 自分の出品（4章B②） */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">自分の出品</h2>
+          <h2 className="text-lg font-bold text-green-900">自分の出品</h2>
           <Link href="/producer/listings/new" className="rounded-full bg-green-800 px-4 py-2 text-white hover:bg-green-900">
             出品する
           </Link>
         </div>
         {listings.length === 0 ? (
-          <p className="mt-2 rounded bg-zinc-50 p-4 text-zinc-600">まだ出品はありません。「出品する」から始めましょう。</p>
+          <p className="mt-2 rounded-xl bg-white p-4 text-stone-600 shadow-sm ring-1 ring-stone-200">まだ出品はありません。「出品する」から始めましょう。</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {listings.map((l) => (
-              <li key={l.id} className="rounded-xl border border-stone-200 bg-white p-4">
+              <li key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-bold">{l.name}</p>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${l.status === "OPEN" ? "bg-green-100 text-green-800" : "bg-stone-100 text-stone-500"}`}>
