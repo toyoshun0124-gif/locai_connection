@@ -1,8 +1,31 @@
 // ログイン後の画面の上に出す帯（誰がログインしているか・ログアウト）
 import { BUYER_TYPES, PREFECTURES, ROLES } from "@/lib/options";
 import type { CurrentUser } from "@/lib/session";
+import { noticesFor } from "@/lib/notices";
 import { LogoutButton } from "./logout-button";
 import Link from "next/link";
+
+// 画面の上に出す、期限のお知らせ（6章）
+async function Notices({ user }: { user: CurrentUser }) {
+  const notices = await noticesFor(user);
+  if (notices.length === 0) return null;
+  const fmt = (d: Date) => d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      {notices.map((n) => (
+        <Link
+          key={n.kind}
+          href={n.href}
+          className={`rounded-lg px-3 py-2 text-sm font-medium ${n.kind === "soon" ? "bg-amber-100 text-amber-900 ring-1 ring-amber-300" : "bg-stone-100 text-stone-800 ring-1 ring-stone-300"}`}
+        >
+          {n.kind === "soon" ? "⏰ " : ""}
+          {n.text}
+          {n.earliest && `（いちばん早い期限：${fmt(n.earliest)}）`} →
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export function AppHeader({ user }: { user: CurrentUser }) {
   const roleLabel =
@@ -10,19 +33,22 @@ export function AppHeader({ user }: { user: CurrentUser }) {
       ? BUYER_TYPES[user.buyerType as keyof typeof BUYER_TYPES]
       : ROLES.PRODUCER;
   return (
-    <header className="flex items-center justify-between gap-2 border-b border-zinc-200 pb-3">
-      <div className="min-w-0">
-        <p className="truncate font-bold">{user.name} さん</p>
-        <p className="text-xs text-zinc-500">
-          {roleLabel}・{PREFECTURES[user.prefecture as keyof typeof PREFECTURES]}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <Link href="/" className="text-sm text-green-800 underline">トップ</Link>
-        <Link href="/mypage/profile" className="text-sm text-green-800 underline">プロフィール</Link>
-        <LogoutButton />
-      </div>
-    </header>
+    <>
+      <header className="flex items-center justify-between gap-2 border-b border-zinc-200 pb-3">
+        <div className="min-w-0">
+          <p className="truncate font-bold">{user.name} さん</p>
+          <p className="text-xs text-zinc-500">
+            {roleLabel}・{PREFECTURES[user.prefecture as keyof typeof PREFECTURES]}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href="/" className="text-sm text-green-800 underline">トップ</Link>
+          <Link href="/mypage/profile" className="text-sm text-green-800 underline">プロフィール</Link>
+          <LogoutButton />
+        </div>
+      </header>
+      <Notices user={user} />
+    </>
   );
 }
 
