@@ -13,12 +13,26 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* 英数字は Inter、日本語は Noto Sans JP で表示する */
+  --font-sans: var(--font-inter), var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-weight: 400; /* 本文はふつうの太さ */
+  line-height: 1.7; /* 日本語が読みやすい行の高さ */
+}
+
+/* 見出しは太字で、少しだけ字の間をつめて引きしめる */
+h1,
+h2 {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* 入力欄の薄い文字（プレースホルダー）は、ふつうの太さ */
+::placeholder {
+  font-weight: 400;
 }

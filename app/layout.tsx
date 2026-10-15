@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { VeggieBackground } from "./veggie-background";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// 英数字：Inter（数字や値段がすっきり読みやすい）
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// 日本語：Noto Sans JP（読みやすいゴシック体）。本文はふつう（400）、少し強め（500）、見出しは太字（700）
+const notoSansJp = Noto_Sans_JP({
+  variable: "--font-noto-sans-jp",
+  weight: ["400", "500", "700"],
+  // 日本語のフォントはファイルが大きいので、先読みはしない（表示に必要な分だけ読み込まれる）
+  preload: false,
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${notoSansJp.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* いちばん後ろに、京野菜のイラスト（全部の画面に出る） */}
