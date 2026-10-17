@@ -61,7 +61,7 @@ export default function LoginPage() {
   return (
     // 背景は生成り色（うすいベージュ）
     <div className="flex flex-1 flex-col">
-      <main className="mx-auto w-full max-w-md px-4 py-10">
+      <main className="mx-auto w-full max-w-md px-4 py-10 sm:max-w-lg lg:max-w-xl lg:py-16">
         {/* アプリの名前と、関西限定であること */}
         <div className="text-center">
           <p className="text-4xl" aria-hidden>🥬</p>
@@ -73,7 +73,8 @@ export default function LoginPage() {
         </div>
 
         {/* 白いカードの中に入力欄をまとめる */}
-        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200">
+        {/* カード：スマホでは今の幅、パソコンでは広げて、中の余白も少し広げる */}
+        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200 sm:p-8">
           {/* ログインと新規登録の切り替え */}
           <div className="flex gap-1 rounded-full bg-stone-100 p-1">
             {(["login", "signup"] as const).map((m) => (
