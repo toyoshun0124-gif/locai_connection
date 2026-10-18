@@ -171,23 +171,6 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
         <Results keyword={parsed.data.q} filters={filters} sort={parsed.data.sort ?? "new"} />
       )}
 
-      {/* 自分の注文（4章A⑤）・ロスの記録・AI の提案への入口 */}
-      <section className="mt-8 flex flex-col gap-3">
-        {[
-          { href: "/buyer/orders", icon: "📋", title: "自分の注文", sub: "状態と回答期限を見る", color: "bg-green-100" },
-          { href: "/buyer/loss", icon: "📊", title: "ロスの記録", sub: "余った量を記録する", color: "bg-amber-100" },
-          { href: "/buyer/alternatives", icon: "🤖", title: "代わりの野菜を探す（AIの提案）", sub: "探しても見つからないときに、関西の代わりの野菜をAIが提案します", color: "bg-sky-100" },
-        ].map((c) => (
-          <Link key={c.href} href={c.href} className={`${softCard} ${liftOnHover} flex items-center gap-4 p-4`}>
-            <span aria-hidden className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl ${c.color}`}>{c.icon}</span>
-            <span className="min-w-0 flex-1">
-              <span className="font-heading block text-lg">{c.title}</span>
-              <span className="block text-xs text-stone-500">{c.sub}</span>
-            </span>
-            <span aria-hidden className="shrink-0 text-lg text-green-800">→</span>
-          </Link>
-        ))}
-      </section>
     </>
   );
 }

@@ -62,7 +62,7 @@ export async function createListing(_prev: ListingFormState, formData: FormData)
       shipDates: v.shipDates.map((d) => new Date(`${d}T00:00:00Z`)),
     },
   });
-  redirect("/producer?listed=1");
+  redirect("/producer/listings?listed=1");
 }
 
 // 相場の参考を返す（出品画面で、商品名を入れたときに呼ぶ）。生産者だけ

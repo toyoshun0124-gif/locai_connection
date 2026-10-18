@@ -20,3 +20,40 @@ export async function messageSummary(userId: string, orders: { id: string; readA
   }
   return summary;
 }
+
+// 自分が関わる取引（お店なら自分の注文、農家さんなら自分の出品に来た注文）のうち、メッセージがあるもの
+// 1行ごとに：相手の名前・食材・まだ読んでいない数・最後のメッセージの時刻・回答期限（返事待ちのときだけ）
+export async function conversationsFor(user: { id: string; role: string }) {
+  const isBuyer = user.role === "BUYER";
+  const orders = await prisma.order.findMany({
+    where: { ...(isBuyer ? { buyerId: user.id } : { listing: { producerId: user.id } }), messages: { some: {} } },
+    select: {
+      id: true, status: true, replyDeadline: true, buyerReadAt: true, producerReadAt: true,
+      buyer: { select: { name: true } },
+      listing: { select: { name: true, producer: { select: { name: true } } } },
+      messages: { orderBy: { createdAt: "desc" }, select: { senderId: true, createdAt: true } },
+    },
+  });
+  return orders
+    .map((o) => {
+      const readAt = isBuyer ? o.buyerReadAt : o.producerReadAt;
+      // 相手から来たメッセージで、最後に読んだ時刻より新しいものの数
+      const unread = o.messages.filter((m) => m.senderId !== user.id && (!readAt || m.createdAt > readAt)).length;
+      const waiting = o.status === "PENDING" || o.status === "CHANGE_PROPOSED";
+      return {
+        orderId: o.id,
+        partnerName: isBuyer ? o.listing.producer.name : o.buyer.name,
+        item: o.listing.name,
+        unread,
+        lastAt: o.messages[0]?.createdAt ?? null,
+        replyDeadline: waiting ? o.replyDeadline : null,
+      };
+    })
+    // まだ読んでいないものがある取引を上に、そのあとは新しいメッセージの順
+    .sort((a, b) => Number(b.unread > 0) - Number(a.unread > 0) || (b.lastAt?.getTime() ?? 0) - (a.lastAt?.getTime() ?? 0));
+}
+
+// まだ読んでいないメッセージの合計（右上のアイコンに出す数）
+export async function unreadTotalFor(user: { id: string; role: string }) {
+  return (await conversationsFor(user)).reduce((sum, c) => sum + c.unread, 0);
+}

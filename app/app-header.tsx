@@ -2,7 +2,10 @@
 import { BUYER_TYPES, PREFECTURES, ROLES } from "@/lib/options";
 import type { CurrentUser } from "@/lib/session";
 import { noticesFor } from "@/lib/notices";
+import { unreadTotalFor } from "@/lib/messages";
 import { LogoutButton } from "./logout-button";
+import { AppTabs } from "./app-tabs";
+import { ChatIcon, UserIcon } from "./icons";
 import Link from "next/link";
 
 // 画面の上に出す、期限のお知らせ（6章）
@@ -27,6 +30,27 @@ async function Notices({ user }: { user: CurrentUser }) {
   );
 }
 
+// 右上のメッセージのアイコン。まだ読んでいないメッセージがあれば、右上に丸の中の数字を出す
+async function MessageButton({ user }: { user: CurrentUser }) {
+  const unread = await unreadTotalFor(user);
+  return (
+    <Link
+      href="/messages"
+      title="メッセージ"
+      aria-label={unread > 0 ? `メッセージ（まだ読んでいない ${unread}件）` : "メッセージ"}
+      className="relative flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-[11px] text-stone-600 hover:bg-white/70 hover:text-green-800"
+    >
+      <ChatIcon size={22} />
+      <span>メッセージ</span>
+      {unread > 0 && (
+        <span className="absolute -right-0.5 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 export function AppHeader({ user }: { user: CurrentUser }) {
   const roleLabel =
     user.role === "BUYER"
@@ -41,13 +65,24 @@ export function AppHeader({ user }: { user: CurrentUser }) {
             {roleLabel}・{PREFECTURES[user.prefecture as keyof typeof PREFECTURES]}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Link href="/" className="text-sm text-green-800 underline">トップ</Link>
-          <Link href="/mypage/profile" className="text-sm text-green-800 underline">プロフィール</Link>
+        {/* 右上：メッセージ・プロフィール・ログアウト（「トップ」はタブの「ホーム」と同じなので置かない） */}
+        <div className="flex shrink-0 items-center gap-1">
+          <MessageButton user={user} />
+          <Link
+            href="/mypage/profile"
+            title="プロフィール"
+            aria-label="プロフィール"
+            className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-[11px] text-stone-600 hover:bg-white/70 hover:text-green-800"
+          >
+            <UserIcon size={22} />
+            <span>プロフィール</span>
+          </Link>
           <LogoutButton />
         </div>
       </header>
       <Notices user={user} />
+      {/* タブ（パソコンは左、スマホは下） */}
+      <AppTabs role={user.role as "BUYER" | "PRODUCER"} />
     </>
   );
 }

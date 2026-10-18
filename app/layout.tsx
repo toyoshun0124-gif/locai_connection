@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* いちばん後ろに、京野菜のイラスト（全部の画面に出る） */}
         <VeggieBackground />
         {/* 各画面の中身は、イラストの上に出す */}
-        <div className="relative z-10 flex flex-1 flex-col">{children}</div>
+        <div className="relative z-10 flex flex-1 flex-col has-[nav[data-app-nav]]:pb-20 lg:has-[nav[data-app-nav]]:pb-0 lg:has-[nav[data-app-nav]]:pl-20">{children}</div>
       </body>
     </html>
   );

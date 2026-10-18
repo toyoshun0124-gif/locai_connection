@@ -2,20 +2,24 @@
 // ログアウトのボタン
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { LogoutIcon } from "./icons";
 
 export function LogoutButton() {
   const router = useRouter();
   return (
     <button
       type="button"
-      className="shrink-0 rounded border border-zinc-300 px-3 py-1 text-sm"
+      title="ログアウト"
+      aria-label="ログアウト"
+      className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-[11px] text-stone-600 hover:bg-white/70 hover:text-green-800"
       onClick={async () => {
         await authClient.signOut();
         router.push("/login");
         router.refresh();
       }}
     >
-      ログアウト
+      <LogoutIcon size={22} />
+      <span>ログアウト</span>
     </button>
   );
 }

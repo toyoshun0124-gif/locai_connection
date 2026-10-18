@@ -1,6 +1,5 @@
 // 生産者（坂田さんなど）のログイン後の画面：出品と、届いた申し込み（4章B）
 import { Suspense } from "react";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { dateToYmd, formatKg, formatYmd, gramsToKgText, todayInJapan } from "@/lib/units";
@@ -10,7 +9,6 @@ import { RECEIVE_LABELS } from "@/lib/order";
 import { formatYen } from "@/lib/price";
 import { expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { ProducerButtons, ProducerCancelButton } from "../orders/respond-buttons";
-import { ListingControls } from "./listing-controls";
 import { MessageLink } from "../orders/message-link";
 import { messageSummary } from "@/lib/messages";
 import { STATUS_LABELS } from "@/lib/order";
@@ -41,7 +39,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
     );
   }
 
-  const { listed } = await searchParams;
+  await searchParams;
   // 自分の出品だけを、新しい順に出す
   await expireOverdueOrders();
   const listings = await prisma.listing.findMany({
@@ -87,7 +85,6 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
     <>
       <AppHeader user={user} />
 
-      {listed === "1" && <p className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-green-800">出品しました</p>}
 
       {/* 届いた申し込み（4章B④：申し込んだ順に並べる） */}
       <section className="mt-6">
@@ -168,50 +165,6 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
         </section>
       )}
 
-      {/* 自分の出品（4章B②） */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg text-green-900"><span aria-hidden>🥬 </span>自分の出品</h2>
-          <Link href="/producer/listings/new" className="rounded-full bg-green-800 px-4 py-2 text-white hover:bg-green-900">
-            出品する
-          </Link>
-        </div>
-        {listings.length === 0 ? (
-          <p className="mt-2 rounded-xl bg-white p-4 text-stone-600 shadow-sm ring-1 ring-stone-200">まだ出品はありません。「出品する」から始めましょう。</p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {listings.map((l) => (
-              <li key={l.id} className={`${softCard} p-4 sm:p-5`}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="font-bold">{l.name}</p>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${l.status === "OPEN" ? "bg-green-100 text-green-800" : "bg-stone-100 text-stone-500"}`}>
-                    {l.status === "OPEN" ? "公開中" : "終了"}
-                  </span>
-                </div>
-                <p className="text-sm text-stone-700">
-                  出品 {formatKg(l.quantityG)}・<span className="font-bold">残り {formatKg(Math.max(remaining.get(l.id) ?? 0, 0))}</span>（申し込める量）
-                </p>
-                <p className="text-sm text-stone-700">
-                  {l.pricePerKg.toLocaleString()}円/kg・{formatKg(l.minOrderG)}から{formatKg(l.unitG)}ずつ
-                </p>
-                <p className="text-sm text-stone-500">出荷できる日：{l.shipDates.map((d) => formatYmd(dateToYmd(d))).join("、")}</p>
-                <p className="text-sm text-stone-500">
-                  {[l.delivery && `届ける（送料 ${l.shippingYen.toLocaleString()}円）`, l.pickup && "取りに来てもらう"].filter(Boolean).join("／")}
-                  ・回答期限 {l.replyDays}日以内
-                </p>
-                {/* 売れ残りを市場に出すとき：量を減らす／出品を終わりにする（4章B⑤） */}
-                {l.status === "OPEN" && (
-                  <ListingControls
-                    listingId={l.id}
-                    remainingKg={gramsToKgText(Math.max(remaining.get(l.id) ?? 0, 0))}
-                    holdCount={orders.filter((o) => o.listingId === l.id && (o.status === "PENDING" || o.status === "CHANGE_PROPOSED")).length}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </>
   );
 }
