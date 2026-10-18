@@ -10,7 +10,7 @@ import { producerCancelCount } from "@/lib/cancel-count";
 export default function ProducerProfilePage({ params }: PageProps<"/producers/[id]">) {
   return (
     <div className="flex flex-1 flex-col">
-      <main className="mx-auto w-full max-w-md px-4 py-6">
+      <main className="mx-auto w-full max-w-md px-4 py-6 lg:max-w-3xl lg:px-8">
         <Suspense fallback={<p>読み込み中…</p>}>
           <ProducerProfile params={params} />
         </Suspense>

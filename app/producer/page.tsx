@@ -19,7 +19,7 @@ import { AppHeader, WrongRoleNotice } from "../app-header";
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
   return (
     <div className="flex flex-1 flex-col">
-      <main className="mx-auto w-full max-w-2xl px-4 py-6">
+      <main className="mx-auto w-full max-w-2xl px-4 py-6 lg:max-w-4xl xl:max-w-5xl lg:px-8">
         <Suspense fallback={<p>読み込み中…</p>}>
           <ProducerHome searchParams={searchParams} />
         </Suspense>

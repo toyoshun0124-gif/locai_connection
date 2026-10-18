@@ -28,7 +28,7 @@ const STATUS_ORDER = ["CHANGE_PROPOSED", "PENDING", "CONFIRMED", "DECLINED", "EX
 export default function BuyerOrdersPage({ searchParams }: PageProps<"/buyer/orders">) {
   return (
     <div className="flex flex-1 flex-col">
-      <main className="mx-auto w-full max-w-2xl px-4 py-6">
+      <main className="mx-auto w-full max-w-2xl px-4 py-6 lg:max-w-4xl xl:max-w-5xl lg:px-8">
         <Suspense fallback={<p>読み込み中…</p>}>
           <BuyerOrders searchParams={searchParams} />
         </Suspense>
