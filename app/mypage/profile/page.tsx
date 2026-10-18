@@ -1,4 +1,5 @@
 // マイページ：自分のプロフィールの登録・修正（スキップもできる）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -27,13 +28,13 @@ async function ProfileContent({ searchParams }: { searchParams: PageProps<"/mypa
   return (
     <>
       <AppHeader user={user} />
-      <h1 className="mt-6 text-xl font-bold text-green-900">プロフィール</h1>
+      <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>👤 </span>プロフィール</h1>
       {welcome && (
         <p className="mt-1 text-sm text-stone-600">
           登録すると、{user.role === "PRODUCER" ? "お店に「この農家さんから買いたい」" : "農家さんに「このお店に売りたい」"}と思ってもらいやすくなります。
         </p>
       )}
-      <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200">
+      <div className={`mt-4 ${softCard} p-5`}>
         <ProfileForm
           role={user.role as "BUYER" | "PRODUCER"}
           prefectureLabel={PREFECTURES[user.prefecture as keyof typeof PREFECTURES]}

@@ -1,5 +1,6 @@
 "use client";
 // 出品の入力フォーム（入力した内容は、エラーが出ても消えない）
+import { inputBox } from "@/lib/ui";
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { createListing, getMarket, type ListingFormState } from "./actions";
@@ -46,8 +47,7 @@ export function ListingForm({
   const err = (key: string) => state.errors?.[key];
   const set = (patch: Partial<ListingValues>) => setV({ ...v, ...patch });
 
-  const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
+  const input = inputBox;
   const label = "font-medium text-stone-800";
   const errorText = (key: string) => err(key) && <span className="text-sm text-red-600">{err(key)}</span>;
 

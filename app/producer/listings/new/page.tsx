@@ -1,4 +1,5 @@
 // 出品する画面：まず「新規作成」か「前の出品を使う」かを選ぶ
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -33,7 +34,7 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
   }
 
   const { mode, from } = await searchParams;
-  const card = "mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200";
+  const card = `mt-4 ${softCard} p-5`;
 
   // ① まだ選んでいないとき：新規作成／前の出品を使う を選ぶ
   if (mode !== "new" && typeof from !== "string") {
@@ -46,7 +47,7 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
     return (
       <>
         <AppHeader user={user} />
-        <h1 className="mt-6 text-xl font-bold text-green-900">出品する</h1>
+        <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>🥬 </span>出品する</h1>
 
         <Link href="/producer/listings/new?mode=new" className={`${card} block hover:ring-green-800`}>
           <p className="font-bold text-green-900">新規作成</p>
@@ -131,7 +132,7 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
     <>
       <AppHeader user={user} />
       <div className="mt-6 flex items-baseline justify-between">
-        <h1 className="text-xl font-bold text-green-900">{baseName ? "前の出品を使って出品" : "新規作成"}</h1>
+        <h1 className="text-xl text-green-900"><span aria-hidden>🥬 </span>{baseName ? "前の出品を使って出品" : "新規作成"}</h1>
         <Link href="/producer/listings/new" className="text-sm text-green-800 underline">選び直す</Link>
       </div>
       {baseName && <p className="text-sm text-stone-600">もとにした出品：{baseName}</p>}

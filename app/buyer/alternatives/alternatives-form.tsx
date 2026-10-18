@@ -1,5 +1,6 @@
 "use client";
 // 代わりの野菜を提案してもらうフォームと、その結果
+import { inputBox, softCard } from "@/lib/ui";
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { formatKg, formatYmd } from "@/lib/units";
@@ -10,8 +11,7 @@ type Initial = { item: string; dishName: string; kg: string; useDate: string };
 export function AlternativesForm({ initial }: { initial: Initial }) {
   const [v, setV] = useState(initial);
   const [state, action, pending] = useActionState<SuggestState, FormData>(suggest, { status: "idle" });
-  const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
+  const input = inputBox;
 
   return (
     <>
@@ -52,7 +52,7 @@ export function AlternativesForm({ initial }: { initial: Initial }) {
       {state.status === "ok" && (
         <ul className="mt-5 flex flex-col gap-3">
           {state.suggestions.map((s) => (
-            <li key={s.name} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+            <li key={s.name} className={`${softCard} p-4`}>
               <p className="text-lg font-bold text-green-900">{s.name}</p>
               {/* AI の説明は、文字として表示する */}
               <p className="text-sm text-stone-700">理由：{s.reason}</p>

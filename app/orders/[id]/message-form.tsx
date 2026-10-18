@@ -1,5 +1,6 @@
 "use client";
 // メッセージを書いて送るフォーム（200字まで）
+import { inputBox } from "@/lib/ui";
 import { useActionState, useState } from "react";
 import { sendMessage, type SendState } from "./actions";
 
@@ -27,7 +28,7 @@ export function MessageForm({ orderId }: { orderId: string }) {
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="例：受け取りは10時ごろでも大丈夫ですか？"
-        className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20"
+        className={inputBox}
       />
       <div className="flex items-center justify-between gap-2">
         {/* 上限に近づいたら、残りの字数を目立たせる（5章「過剰」） */}

@@ -10,6 +10,7 @@ import { canOrder, expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { isOrderableShipDate } from "@/lib/order";
 import { dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
+import { inputBox, liftOnHover, softCard } from "@/lib/ui";
 import { BUDGETS, RECEIVE_FILTERS, matchesReceiveAndBudget, shipDatesForUseDate, type BudgetKey } from "@/lib/search";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
@@ -43,11 +44,6 @@ function filterParams(keyword: string, sort: string, f: Filters) {
     ...(f.receive ? { receive: f.receive } : {}),
   });
 }
-
-// 見た目の部品：やわらかい影の丸いカード／押せるカード（パソコンでマウスを乗せると、ふわっと少し浮く）
-const softCard = "rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70";
-const liftOnHover =
-  "transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_30px_-12px_rgba(31,77,35,0.35)] hover:ring-green-700/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0";
 
 // 使い方の3つのステップ（絵文字・色・説明）
 const STEPS = [
@@ -96,8 +92,7 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
     receive: parsed?.success && parsed.data.receive ? parsed.data.receive : null,
   };
 
-  const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
+  const input = inputBox;
 
   return (
     <>

@@ -1,5 +1,6 @@
 "use client";
 // プロフィールの入力フォーム
+import { inputBox } from "@/lib/ui";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile, type SaveState } from "./actions";
@@ -29,8 +30,7 @@ export function ProfileForm({
   }, [state, welcome, router]);
 
   const isProducer = role === "PRODUCER";
-  const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
+  const input = inputBox;
 
   // 1つの入力欄（ラベル・説明・エラー）
   function Field(props: { name: keyof Values; label: string; hint?: string; max: number; multiline?: boolean; placeholder?: string }) {

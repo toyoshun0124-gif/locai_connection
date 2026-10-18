@@ -15,6 +15,7 @@ import { MessageLink } from "../orders/message-link";
 import { messageSummary } from "@/lib/messages";
 import { STATUS_LABELS } from "@/lib/order";
 import { AppHeader, WrongRoleNotice } from "../app-header";
+import { softCard } from "@/lib/ui";
 
 export default function ProducerPage({ searchParams }: PageProps<"/producer">) {
   return (
@@ -99,7 +100,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
             const heldG = mine.filter((o) => o.status !== "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             const confirmedG = mine.filter((o) => o.status === "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             return (
-              <div key={l.id} className="mt-3 rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-4 sm:p-5">
+              <div key={l.id} className={`mt-3 ${softCard} p-4 sm:p-5`}>
                 <p className="font-bold">{l.name}<span className="ml-2 text-sm font-normal text-stone-500">出品 {formatKg(l.quantityG)}</span></p>
                 <ol className="mt-2 flex flex-col gap-3">
                   {mine.map((o, i) => {
@@ -155,7 +156,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
           <h2 className="text-lg text-green-900"><span aria-hidden>🗂️ </span>終わった申し込み</h2>
           <ul className="mt-2 flex flex-col gap-2">
             {finished.map((o) => (
-              <li key={o.id} className="rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-3 sm:p-4">
+              <li key={o.id} className={`${softCard} p-3 sm:p-4`}>
                 <p className="text-sm">
                   {o.listing.name}・{o.buyer.name}・{formatKg(o.quantityG)}
                   <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">{STATUS_LABELS[o.status]}</span>
@@ -180,7 +181,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {listings.map((l) => (
-              <li key={l.id} className="rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-4 sm:p-5">
+              <li key={l.id} className={`${softCard} p-4 sm:p-5`}>
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-bold">{l.name}</p>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${l.status === "OPEN" ? "bg-green-100 text-green-800" : "bg-stone-100 text-stone-500"}`}>

@@ -1,5 +1,6 @@
 // ロスの記録（4章A 追加機能）：使用日を迎えた販売確定の注文に、余った割合を記録する
 // アプリは過去の仕入れ量とロス量を計算して見せるだけ。次に何kg申し込むかは三上さんが決める（6章ルール5）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -56,21 +57,21 @@ async function Loss() {
     byItem.set(o.listing.name, s);
   }
 
-  const card = "mt-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200";
+  const card = `mt-3 ${softCard} p-4`;
   return (
     <>
       <AppHeader user={user} />
       <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
-      <h1 className="mt-2 text-xl font-bold text-green-900">ロスの記録</h1>
+      <h1 className="mt-2 text-xl text-green-900"><span aria-hidden>📊 </span>ロスの記録</h1>
       <p className="text-sm text-stone-600">営業のあとに、アプリで買った野菜がどれだけ余ったかを、ボタンで記録します。</p>
 
       {/* 食材ごとのまとめ */}
       <section className="mt-5">
         <h2 className="font-bold">これまでの記録（食材ごと）</h2>
         {byItem.size === 0 ? (
-          <p className="mt-2 rounded-xl bg-white/70 p-4 text-sm text-stone-600">まだ記録がありません。</p>
+          <p className={`mt-2 ${softCard} p-4 text-sm text-stone-600`}>まだ記録がありません。</p>
         ) : (
-          <div className="mt-2 overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-stone-200">
+          <div className={`mt-2 overflow-x-auto ${softCard}`}>
             <table className="w-full text-sm">
               <thead className="bg-stone-50 text-stone-600">
                 <tr>

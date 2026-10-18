@@ -1,4 +1,5 @@
 // 三上さんの「自分の注文」の一覧（4章A⑤）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -82,7 +83,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
       <AppHeader user={user} />
       <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
       <div className="mt-2 flex items-baseline justify-between">
-        <h1 className="text-xl font-bold text-green-900">自分の注文</h1>
+        <h1 className="text-xl text-green-900"><span aria-hidden>📋 </span>自分の注文</h1>
         <Link href="/buyer/loss" className="text-sm text-green-800 underline">ロスの記録 →</Link>
       </div>
 
@@ -93,11 +94,11 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
       )}
 
       {orders.length === 0 ? (
-        <p className="mt-3 rounded-xl bg-white p-4 text-stone-600">まだ申し込みはありません。</p>
+        <p className={`mt-3 ${softCard} p-4 text-stone-600`}>まだ申し込みはありません。</p>
       ) : (
         <ul className="mt-3 flex flex-col gap-2">
           {orders.map((o) => (
-            <li key={o.id} className={`rounded-xl bg-white p-4 shadow-sm ring-1 ${o.id === ordered ? "ring-2 ring-green-700" : "ring-stone-200"}`}>
+            <li key={o.id} className={`${softCard} p-4 sm:p-5 ${o.id === ordered ? "ring-2 ring-green-700" : ""}`}>
               <div className="flex items-baseline justify-between gap-2">
                 <p className="font-bold">{o.listing.name}<span className="ml-2 text-sm font-normal text-stone-500">{o.listing.producer.name}</span></p>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[o.status]}`}>{STATUS_LABELS[o.status]}</span>

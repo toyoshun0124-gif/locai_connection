@@ -1,4 +1,5 @@
 // 代わりの野菜を探す画面（AI の提案。4章A③）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -54,9 +55,9 @@ async function Alternatives({ searchParams }: { searchParams: PageProps<"/buyer/
     <>
       <AppHeader user={user} />
       <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
-      <h1 className="mt-2 text-xl font-bold text-green-900">代わりの野菜を探す</h1>
+      <h1 className="mt-2 text-xl text-green-900"><span aria-hidden>🤖 </span>代わりの野菜を探す</h1>
       <p className="text-sm text-stone-600">関西の野菜で、予定していた料理に使えるものを、AI が提案します。</p>
-      <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200">
+      <div className={`mt-4 ${softCard} p-5`}>
         <AlternativesForm initial={initial} />
       </div>
     </>

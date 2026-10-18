@@ -1,4 +1,5 @@
 // 出品の詳細（三上さんが一覧からタップして見る画面。4章A④）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -65,7 +66,7 @@ async function ListingDetail({
     },
   });
 
-  const card = "mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200";
+  const card = `mt-4 ${softCard} p-5`;
   const tomorrow = addDays(todayInJapan(), 1);
   const futureDates = l ? l.shipDates.map(dateToYmd).filter((d) => d >= tomorrow) : [];
   if (!l || futureDates.length === 0) {
@@ -117,7 +118,7 @@ async function ListingDetail({
 
       {/* いつ届くか */}
       <section className={card}>
-        <h2 className="font-bold text-green-900">出荷できる日</h2>
+        <h2 className="text-green-900"><span aria-hidden>📅 </span>出荷できる日</h2>
         <ul className="mt-2 flex flex-wrap gap-2">
           {futureDates.map((d) => (
             <li key={d} className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-900">{formatYmd(d)}</li>
@@ -127,7 +128,7 @@ async function ListingDetail({
 
       {/* 値段の内訳（金額はアプリが計算する） */}
       <section className={card}>
-        <h2 className="font-bold text-green-900">値段の内訳（{formatKg(g)}{wantG === null ? "：いちばん少ない注文量" : ""}の場合）</h2>
+        <h2 className="text-green-900"><span aria-hidden>💴 </span>値段の内訳（{formatKg(g)}{wantG === null ? "：いちばん少ない注文量" : ""}の場合）</h2>
         <dl className="mt-2 grid grid-cols-[1fr_auto] gap-y-1 text-stone-800">
           <dt>野菜の代金（{l.pricePerKg.toLocaleString("ja-JP")}円/kg × {formatKg(g)}）</dt>
           <dd className="text-right">{formatYen(item)}</dd>
@@ -151,18 +152,18 @@ async function ListingDetail({
 
       {/* 受け取り条件・回答期限 */}
       <section className={card}>
-        <h2 className="font-bold text-green-900">受け取り条件</h2>
+        <h2 className="text-green-900"><span aria-hidden>🚚 </span>受け取り条件</h2>
         <ul className="mt-1 list-inside list-disc text-stone-800">
           {l.delivery && <li>農家さんが届ける（送料 {formatYen(l.shippingYen)}）</li>}
           {l.pickup && <li>お店が取りに行く（送料なし）</li>}
         </ul>
-        <h2 className="mt-3 font-bold text-green-900">農家さんの返事</h2>
+        <h2 className="mt-3 text-green-900"><span aria-hidden>⏳ </span>農家さんの返事</h2>
         <p className="text-stone-800">申し込みから {l.replyDays}日以内 に返事が来ます</p>
       </section>
 
       {/* 農家さん */}
       <section className={card}>
-        <h2 className="font-bold text-green-900">農家さん</h2>
+        <h2 className="text-green-900"><span aria-hidden>🧑‍🌾 </span>農家さん</h2>
         <Link href={`/producers/${l.producer.id}`} className="mt-1 inline-block text-lg text-green-800 underline">
           {l.producer.name}
         </Link>
@@ -176,7 +177,7 @@ async function ListingDetail({
 
       {/* 申し込み */}
       <section className={card}>
-        <h2 className="text-lg font-bold text-green-900">申し込む</h2>
+        <h2 className="text-lg text-green-900"><span aria-hidden>🛒 </span>申し込む</h2>
         <p className="mb-3 text-xs text-stone-500">出荷日の4日前まで申し込めます</p>
         {remainingG < l.minOrderG ? (
           <p className="text-stone-600">いまは申し込める量が残っていません。農家さんの返事によっては、また申し込めるようになります。</p>

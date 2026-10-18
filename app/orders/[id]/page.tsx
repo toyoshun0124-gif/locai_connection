@@ -1,4 +1,5 @@
 // 取引の画面：注文の内容・メッセージ・サポートの案内（その注文のお店と農家さんだけが見られる）
+import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -44,7 +45,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
     return (
       <>
         <AppHeader user={user} />
-        <p className="mt-6 rounded-xl bg-white p-4">取引が見つかりません。</p>
+        <p className={`mt-6 ${softCard} p-4`}>取引が見つかりません。</p>
       </>
     );
   }
@@ -59,7 +60,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
   const partnerName = isBuyer ? order.listing.producer.name : order.buyer.name;
   const fmtDateTime = (d: Date) =>
     d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  const card = "mt-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200";
+  const card = `mt-4 ${softCard} p-5`;
 
   return (
     <>
@@ -88,7 +89,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
 
       {/* メッセージ */}
       <section className={card}>
-        <h2 className="font-bold text-green-900">メッセージ</h2>
+        <h2 className="text-green-900"><span aria-hidden>💬 </span>メッセージ</h2>
         <p className="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
           量・金額・日にちは、メッセージに書いても変わりません。電話番号などの連絡先は書かないでください。
         </p>
@@ -116,8 +117,8 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
       </section>
 
       {/* サポートの案内（いつも画面のいちばん下に置く） */}
-      <section className="mt-6 rounded-2xl border border-stone-300 bg-white/70 p-4 text-sm text-stone-700">
-        <h2 className="font-bold">サポートに連絡</h2>
+      <section className={`mt-6 ${softCard} p-4 text-sm text-stone-700`}>
+        <h2><span aria-hidden>🛟 </span>サポートに連絡</h2>
         <p className="mt-1">取引で困ったことがあれば、運営に連絡してください。</p>
         <p className="mt-1">
           メール：<a href={`mailto:${SUPPORT_EMAIL}`} className="text-green-800 underline">{SUPPORT_EMAIL}</a>

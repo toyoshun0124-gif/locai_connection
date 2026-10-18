@@ -1,5 +1,6 @@
 "use client";
 // ログイン・新規登録の画面
+import { inputBox, softCard } from "@/lib/ui";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -55,8 +56,7 @@ export default function LoginPage() {
   }
 
   // 入力欄の見た目（畑・自然のあたたかさ：生成り色と深い緑）
-  const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-800 focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-800/20";
+  const input = inputBox;
 
   return (
     // 背景は生成り色（うすいベージュ）
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
         {/* 白いカードの中に入力欄をまとめる */}
         {/* カード：スマホでは今の幅、パソコンでは広げて、中の余白も少し広げる */}
-        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200 sm:p-8">
+        <div className={`mt-6 ${softCard} p-5 sm:p-8`}>
           {/* ログインと新規登録の切り替え */}
           <div className="flex gap-1 rounded-full bg-stone-100 p-1">
             {(["login", "signup"] as const).map((m) => (
