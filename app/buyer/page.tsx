@@ -93,7 +93,7 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 
       {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
       <section className="mt-5 rounded-xl bg-white/80 p-3 text-sm text-stone-700 ring-1 ring-stone-200">
-        <p className="font-bold text-green-900">このアプリの使い方</p>
+        <p className="font-heading text-green-900">このアプリの使い方</p>
         <ol className="mt-1 flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:gap-x-2">
           <li>① 野菜を探す</li>
           <li><span className="sm:inline hidden">→ </span>② 申し込む（農家さんが返事）</li>
@@ -161,17 +161,17 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
       {/* 自分の注文（4章A⑤） */}
       <section className="mt-8">
         <Link href="/buyer/orders" className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
-          <span className="text-lg font-bold">自分の注文</span>
+          <span className="font-heading text-lg">自分の注文</span>
           <span className="text-sm text-green-800">状態と回答期限を見る →</span>
         </Link>
         <Link href="/buyer/loss" className="mt-2 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
-          <span className="text-lg font-bold">ロスの記録</span>
+          <span className="font-heading text-lg">ロスの記録</span>
           <span className="text-sm text-green-800">余った量を記録する →</span>
         </Link>
         {/* AI の提案への入口（探しても見つからないときに使う） */}
         <Link href="/buyer/alternatives" className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
           <span className="min-w-0">
-            <span className="block text-lg font-bold">代わりの野菜を探す（AIの提案）</span>
+            <span className="font-heading block text-lg">代わりの野菜を探す（AIの提案）</span>
             <span className="block text-xs text-stone-500">探しても見つからないときに、関西の代わりの野菜をAIが提案します</span>
           </span>
           <span className="shrink-0 text-sm text-green-800">→</span>

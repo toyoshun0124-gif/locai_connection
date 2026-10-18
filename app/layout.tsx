@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
+import { Inter, Noto_Sans_JP, Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import { VeggieBackground } from "./veggie-background";
 
@@ -7,6 +7,14 @@ import { VeggieBackground } from "./veggie-background";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// 見出し：Zen Maru Gothic（丸みのある、親しみやすいフォント）。見出しだけに使う
+const zenMaru = Zen_Maru_Gothic({
+  variable: "--font-zen-maru",
+  weight: ["500", "700"],
+  preload: false,
   display: "swap",
 });
 
@@ -28,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ja"
-      className={`${inter.variable} ${notoSansJp.variable} h-full antialiased`}
+      className={`${inter.variable} ${notoSansJp.variable} ${zenMaru.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* いちばん後ろに、京野菜のイラスト（全部の画面に出る） */}
