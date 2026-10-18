@@ -44,6 +44,18 @@ function filterParams(keyword: string, sort: string, f: Filters) {
   });
 }
 
+// 見た目の部品：やわらかい影の丸いカード／押せるカード（パソコンでマウスを乗せると、ふわっと少し浮く）
+const softCard = "rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70";
+const liftOnHover =
+  "transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_30px_-12px_rgba(31,77,35,0.35)] hover:ring-green-700/40 motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+
+// 使い方の3つのステップ（絵文字・色・説明）
+const STEPS = [
+  { icon: "🥬", title: "① 探す", text: "食材名で探して、量・使用日・予算などで絞り込み", color: "bg-green-100" },
+  { icon: "🤝", title: "② 申し込む", text: "必要な量だけ申し込み。農家さんが「売る・量を減らす・見送る」で返事", color: "bg-amber-100" },
+  { icon: "🤖", title: "③ AIがフォロー", text: "買えなかったときは、AIが関西の代わりの野菜と理由を提案", color: "bg-sky-100" },
+];
+
 export default function BuyerPage({ searchParams }: PageProps<"/buyer">) {
   return (
     <div className="flex flex-1 flex-col">
@@ -92,12 +104,18 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
       <AppHeader user={user} />
 
       {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
-      <section className="mt-5 rounded-xl bg-white/80 p-3 text-sm text-stone-700 ring-1 ring-stone-200">
-        <p className="font-heading text-green-900">このアプリの使い方</p>
-        <ol className="mt-1 flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:gap-x-2">
-          <li>① 野菜を探す</li>
-          <li><span className="sm:inline hidden">→ </span>② 申し込む（農家さんが返事）</li>
-          <li><span className="sm:inline hidden">→ </span>③ 買えなかったら、<span className="font-medium text-green-900">AIが代わりの野菜を提案</span></li>
+      <section className="mt-5">
+        <h2 className="text-base text-green-900">このアプリの使い方</h2>
+        <ol className="mt-2 grid gap-3 sm:grid-cols-3">
+          {STEPS.map((st) => (
+            <li key={st.title} className={`${softCard} ${liftOnHover} flex items-start gap-3 p-4`}>
+              <span aria-hidden className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl ${st.color}`}>{st.icon}</span>
+              <span className="min-w-0">
+                <span className="font-heading block text-green-900">{st.title}</span>
+                <span className="block text-sm text-stone-600">{st.text}</span>
+              </span>
+            </li>
+          ))}
         </ol>
       </section>
 
@@ -105,10 +123,10 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
       <section className="mt-6">
         <h1 className="text-xl font-bold text-green-900">野菜を探す</h1>
         <p className="text-sm text-stone-600">関西の農家さんの出品から探せます</p>
-        <form action="/buyer" method="get" className="mt-3 flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+        <form action="/buyer" method="get" className={`mt-3 flex flex-col gap-2 p-4 sm:p-5 ${softCard}`}>
           <div className="flex gap-2">
-            <input name="q" defaultValue={raw.q ?? ""} maxLength={50} required placeholder="食材名（例：賀茂茄子）" className={`${input} min-w-0 flex-1`} />
-            <button type="submit" className="shrink-0 rounded-full bg-green-800 px-5 py-2 text-white hover:bg-green-900">探す</button>
+            <input name="q" defaultValue={raw.q ?? ""} maxLength={50} required placeholder="食材名（例：賀茂茄子）" className={`${input} min-w-0 flex-1 rounded-full px-5 py-3 text-base`} />
+            <button type="submit" className="shrink-0 rounded-full bg-green-800 px-7 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-green-900">探す</button>
           </div>
           {parsed && !parsed.success && <p className="text-sm text-red-600">食材名を入力してください（50文字まで）</p>}
           <details open={Boolean(raw.kg || raw.useDate || raw.budget || raw.receive || raw.sort)}>
@@ -158,24 +176,22 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
         <Results keyword={parsed.data.q} filters={filters} sort={parsed.data.sort ?? "new"} />
       )}
 
-      {/* 自分の注文（4章A⑤） */}
-      <section className="mt-8">
-        <Link href="/buyer/orders" className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
-          <span className="font-heading text-lg">自分の注文</span>
-          <span className="text-sm text-green-800">状態と回答期限を見る →</span>
-        </Link>
-        <Link href="/buyer/loss" className="mt-2 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
-          <span className="font-heading text-lg">ロスの記録</span>
-          <span className="text-sm text-green-800">余った量を記録する →</span>
-        </Link>
-        {/* AI の提案への入口（探しても見つからないときに使う） */}
-        <Link href="/buyer/alternatives" className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800">
-          <span className="min-w-0">
-            <span className="font-heading block text-lg">代わりの野菜を探す（AIの提案）</span>
-            <span className="block text-xs text-stone-500">探しても見つからないときに、関西の代わりの野菜をAIが提案します</span>
-          </span>
-          <span className="shrink-0 text-sm text-green-800">→</span>
-        </Link>
+      {/* 自分の注文（4章A⑤）・ロスの記録・AI の提案への入口 */}
+      <section className="mt-8 flex flex-col gap-3">
+        {[
+          { href: "/buyer/orders", icon: "📋", title: "自分の注文", sub: "状態と回答期限を見る", color: "bg-green-100" },
+          { href: "/buyer/loss", icon: "📊", title: "ロスの記録", sub: "余った量を記録する", color: "bg-amber-100" },
+          { href: "/buyer/alternatives", icon: "🤖", title: "代わりの野菜を探す（AIの提案）", sub: "探しても見つからないときに、関西の代わりの野菜をAIが提案します", color: "bg-sky-100" },
+        ].map((c) => (
+          <Link key={c.href} href={c.href} className={`${softCard} ${liftOnHover} flex items-center gap-4 p-4`}>
+            <span aria-hidden className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl ${c.color}`}>{c.icon}</span>
+            <span className="min-w-0 flex-1">
+              <span className="font-heading block text-lg">{c.title}</span>
+              <span className="block text-xs text-stone-500">{c.sub}</span>
+            </span>
+            <span aria-hidden className="shrink-0 text-lg text-green-800">→</span>
+          </Link>
+        ))}
       </section>
     </>
   );
@@ -241,7 +257,7 @@ async function Results({ keyword, filters, sort }: { keyword: string; filters: F
               <li key={l.id}>
                 <Link
                   href={`/listings/${l.id}?${filterParams(keyword, sort, filters)}`}
-                  className="flex items-start justify-between gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200 hover:ring-green-800"
+                  className={`${softCard} ${liftOnHover} flex items-start justify-between gap-3 p-4 sm:p-5`}
                 >
                   <div className="min-w-0">
                     {/* 1. 食材名 */}

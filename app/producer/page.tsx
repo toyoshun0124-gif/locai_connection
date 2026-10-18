@@ -90,7 +90,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
 
       {/* 届いた申し込み（4章B④：申し込んだ順に並べる） */}
       <section className="mt-6">
-        <h1 className="text-xl font-bold text-green-900">届いた申し込み</h1>
+        <h1 className="text-xl text-green-900"><span aria-hidden>📥 </span>届いた申し込み</h1>
         {listingsWithOrders.length === 0 ? (
           <p className="mt-2 rounded-xl bg-white p-4 text-stone-600 shadow-sm ring-1 ring-stone-200">まだ申し込みはありません。</p>
         ) : (
@@ -99,7 +99,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
             const heldG = mine.filter((o) => o.status !== "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             const confirmedG = mine.filter((o) => o.status === "CONFIRMED").reduce((sum, o) => sum + o.quantityG, 0);
             return (
-              <div key={l.id} className="mt-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+              <div key={l.id} className="mt-3 rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-4 sm:p-5">
                 <p className="font-bold">{l.name}<span className="ml-2 text-sm font-normal text-stone-500">出品 {formatKg(l.quantityG)}</span></p>
                 <ol className="mt-2 flex flex-col gap-3">
                   {mine.map((o, i) => {
@@ -152,10 +152,10 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
 
       {finished.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-bold text-green-900">終わった申し込み</h2>
+          <h2 className="text-lg text-green-900"><span aria-hidden>🗂️ </span>終わった申し込み</h2>
           <ul className="mt-2 flex flex-col gap-2">
             {finished.map((o) => (
-              <li key={o.id} className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-stone-200">
+              <li key={o.id} className="rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-3 sm:p-4">
                 <p className="text-sm">
                   {o.listing.name}・{o.buyer.name}・{formatKg(o.quantityG)}
                   <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">{STATUS_LABELS[o.status]}</span>
@@ -170,7 +170,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
       {/* 自分の出品（4章B②） */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-green-900">自分の出品</h2>
+          <h2 className="text-lg text-green-900"><span aria-hidden>🥬 </span>自分の出品</h2>
           <Link href="/producer/listings/new" className="rounded-full bg-green-800 px-4 py-2 text-white hover:bg-green-900">
             出品する
           </Link>
@@ -180,7 +180,7 @@ async function ProducerHome({ searchParams }: { searchParams: PageProps<"/produc
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {listings.map((l) => (
-              <li key={l.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
+              <li key={l.id} className="rounded-3xl bg-white shadow-[0_6px_24px_-10px_rgba(31,77,35,0.25)] ring-1 ring-stone-200/70 p-4 sm:p-5">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-bold">{l.name}</p>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${l.status === "OPEN" ? "bg-green-100 text-green-800" : "bg-stone-100 text-stone-500"}`}>
