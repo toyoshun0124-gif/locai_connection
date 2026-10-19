@@ -1,6 +1,7 @@
 // 残りの量（いま申し込める量）の計算。サーバー側だけで使う
 // 6章ルール1：残り ＝ 出品した量 − 販売確定の量 − 仮押さえ中の量
 import "server-only";
+import { cache } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -28,6 +29,11 @@ export async function expireOverdueOrders(db: Db = prisma, now = new Date()) {
     data: { status: "EXPIRED" },
   });
 }
+
+// 画面を表示するときの期限切れのチェック。1回の表示の中では、何回呼んでも1回だけ行う（cache）
+export const expireOverdueOrdersOnce = cache(async () => {
+  await expireOverdueOrders();
+});
 
 // 1つの出品の残りの量（g）
 export async function remainingGramsOf(db: Db, listing: { id: string; quantityG: number }, now = new Date()) {

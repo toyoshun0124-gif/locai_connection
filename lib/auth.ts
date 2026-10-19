@@ -14,6 +14,10 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
   },
+  // ログインしているかの確認を、ブラウザの札（クッキー）に5分覚えておく（毎回データベースに聞かないため。画面が速くなる）
+  session: {
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
+  },
   user: {
     // 登録のときに追加で受け取る項目。Zod でサーバー側でも必ずチェックする
     additionalFields: {
