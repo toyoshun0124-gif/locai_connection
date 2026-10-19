@@ -81,8 +81,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
   return (
     <>
       <AppHeader user={user} />
-      <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
-      <div className="mt-2 flex items-baseline justify-between">
+      <div className="mt-6 flex items-baseline justify-between">
         <h1 className="text-xl text-green-900"><span aria-hidden>📋 </span>自分の注文</h1>
         <Link href="/buyer/loss" className="text-sm text-green-800 underline">ロスの記録 →</Link>
       </div>

@@ -134,3 +134,12 @@ export function LogoutIcon(p: IconProps) {
     </Base>
   );
 }
+
+// 戻る（左向きの矢印）
+export function BackIcon(p: IconProps) {
+  return (
+    <Base {...p}>
+      <path d="M14.5 6 8.5 12l6 6" />
+    </Base>
+  );
+}

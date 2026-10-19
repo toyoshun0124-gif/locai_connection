@@ -2,7 +2,6 @@
 // アプリは過去の仕入れ量とロス量を計算して見せるだけ。次に何kg申し込むかは三上さんが決める（6章ルール5）
 import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { LOSS_LABELS, lossGrams, lossPercentText } from "@/lib/loss";
@@ -61,8 +60,7 @@ async function Loss() {
   return (
     <>
       <AppHeader user={user} />
-      <Link href="/buyer" className="mt-4 inline-block text-sm text-green-800 underline">← 野菜を探す</Link>
-      <h1 className="mt-2 text-xl text-green-900"><span aria-hidden>📊 </span>ロスの記録</h1>
+      <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>📊 </span>ロスの記録</h1>
       <p className="text-sm text-stone-600">営業のあとに、アプリで買った野菜がどれだけ余ったかを、ボタンで記録します。</p>
 
       {/* 食材ごとのまとめ */}

@@ -1,7 +1,6 @@
 // 取引の画面：注文の内容・メッセージ・サポートの案内（その注文のお店と農家さんだけが見られる）
 import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { RECEIVE_LABELS, STATUS_LABELS } from "@/lib/order";
@@ -9,6 +8,7 @@ import { formatYen } from "@/lib/price";
 import { dateToYmd, formatKg, formatYmd } from "@/lib/units";
 import { AppHeader } from "../../app-header";
 import { MessageForm } from "./message-form";
+import { BackLink } from "../../back-link";
 
 // デモ用の作り物のサポート窓口（実在しない）
 const SUPPORT_EMAIL = "support@example.com";
@@ -65,9 +65,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
   return (
     <>
       <AppHeader user={user} />
-      <Link href={isBuyer ? "/buyer/orders" : "/producer"} className="mt-4 inline-block text-sm text-green-800 underline">
-        ← {isBuyer ? "自分の注文" : "届いた申し込み"}に戻る
-      </Link>
+      <BackLink href={isBuyer ? "/buyer/orders" : "/producer"}>{isBuyer ? "自分の注文" : "届いた申し込み"}に戻る</BackLink>
 
       {/* 注文の内容 */}
       <section className={card}>

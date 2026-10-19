@@ -12,6 +12,7 @@ import { OrderForm } from "./order-form";
 import { producerCancelCount } from "@/lib/cancel-count";
 import { addDays, dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../app-header";
+import { BackLink } from "../../back-link";
 
 export default function ListingDetailPage({ params, searchParams }: PageProps<"/listings/[id]">) {
   return (
@@ -97,7 +98,7 @@ async function ListingDetail({
   return (
     <>
       <AppHeader user={user} />
-      <Link href={backHref} className="mt-4 inline-block text-sm text-green-800 underline">← 一覧に戻る</Link>
+      <BackLink href={backHref}>一覧に戻る</BackLink>
 
       {/* 食材名・産地・値段 */}
       <div className={card}>
