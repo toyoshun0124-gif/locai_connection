@@ -2,7 +2,6 @@
 import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
@@ -10,6 +9,7 @@ import { SHIP_DATE_FROM_DAYS, SHIP_DATE_TO_DAYS } from "@/lib/listing";
 import { addDays, formatYmd, gramsToKgText, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../../app-header";
 import { ListingForm, type ListingValues } from "./listing-form";
+import { BackLink } from "../../../back-link";
 
 export default function NewListingPage({ searchParams }: PageProps<"/producer/listings/new">) {
   return (
@@ -93,10 +93,9 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
   return (
     <>
       <AppHeader user={user} />
-      <div className="mt-6 flex items-baseline justify-between">
-        <h1 className="text-xl text-green-900"><span aria-hidden>🥬 </span>{baseName ? "前の出品を使って出品" : "新規作成"}</h1>
-        <Link href="/producer" className="text-sm text-green-800 underline">選び直す</Link>
-      </div>
+      {/* 戻るボタン：三上さんの「一覧に戻る」と同じ形。行き先が分かる名前にする */}
+      <BackLink href="/producer">ホームに戻る</BackLink>
+      <h1 className="mt-4 text-xl text-green-900"><span aria-hidden>🥬 </span>{baseName ? "前の出品を使って出品" : "新規作成"}</h1>
       {baseName && <p className="text-sm text-stone-600">もとにした出品：{baseName}</p>}
       <div className={card}>
         <ListingForm initial={initial} dateChoices={dateChoices} prefectureLabel={PREFECTURES[user.prefecture as keyof typeof PREFECTURES]} />
