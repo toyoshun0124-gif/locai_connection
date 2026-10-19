@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { BUYER_TYPES, PREFECTURES, ROLES } from "@/lib/options";
+import { LogoMark } from "../icons";
 
 type Mode = "login" | "signup";
 
@@ -62,13 +63,17 @@ export default function LoginPage() {
     // 背景は生成り色（うすいベージュ）
     <div className="flex flex-1 flex-col">
       <main className="mx-auto w-full max-w-md px-4 py-10 sm:max-w-lg lg:max-w-xl lg:py-16">
-        {/* アプリの名前と、関西限定であること */}
-        <div className="text-center">
-          <p className="text-4xl" aria-hidden>🥬</p>
-          <h1 className="mt-2 text-2xl font-bold text-green-900">LocAI 野菜仕入れ</h1>
-          <p className="mt-1 text-sm text-stone-600">関西の農家さんとお店を、必要な量でつなぐ</p>
-          <p className="mt-2 inline-block rounded-full bg-green-900/10 px-3 py-0.5 text-xs text-green-900">
-            関西（2府4県）限定
+        {/* アプリの名前（LocAI）と、何のアプリかの一言。関西限定は、新規登録の府県の欄に出す */}
+        <div className="flex flex-col items-center text-center">
+          {/* ロゴ（置き場所は、あとで考える） */}
+          <LogoMark size={72} />
+          <h1 className="mt-3 text-5xl tracking-wide text-green-900 sm:text-6xl">
+            Loc<span className="text-green-600">AI</span>
+          </h1>
+          <p className="font-heading mt-3 text-base font-medium text-stone-600 sm:text-lg">
+            関西の農家さんとお店を、
+            <br className="sm:hidden" />
+            必要な量でつなぐ
           </p>
         </div>
 
@@ -123,7 +128,7 @@ export default function LoginPage() {
                 </label>
 
                 <label className="flex flex-col gap-1">
-                  <span className="font-medium text-stone-800">府県</span>
+                  <span className="font-medium text-stone-800">府県<span className="ml-1 text-sm font-normal text-green-800">（関西2府4県限定）</span></span>
                   <select className={input} value={prefecture} onChange={(e) => setPrefecture(e.target.value as keyof typeof PREFECTURES)} required>
                     <option value="">選んでください</option>
                     {(Object.keys(PREFECTURES) as (keyof typeof PREFECTURES)[]).map((p) => (

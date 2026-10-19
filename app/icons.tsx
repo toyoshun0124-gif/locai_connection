@@ -143,3 +143,21 @@ export function BackIcon(p: IconProps) {
     </Base>
   );
 }
+
+// LocAI のロゴ（丸の中から、葉っぱが2枚出ている芽。地元の畑から、つながりが育つイメージ）
+export function LogoMark({ size = 64, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden {...rest}>
+      {/* 外の丸（つながり） */}
+      <circle cx="32" cy="32" r="28" stroke="#166534" strokeWidth="3" fill="#f0fdf4" />
+      {/* 土 */}
+      <path d="M17 44c4.5-2.2 9.6-3.2 15-3.2s10.5 1 15 3.2" stroke="#a16207" strokeWidth="3" />
+      {/* 茎 */}
+      <path d="M32 41V27" stroke="#166534" strokeWidth="3" />
+      {/* 左の葉 */}
+      <path d="M32 31c-1-6.5-6-10.5-13-10.5.2 6.8 5.6 10.8 13 10.5z" stroke="#166534" strokeWidth="3" fill="#bbf7d0" />
+      {/* 右の葉 */}
+      <path d="M32 27c.6-6.8 5.6-11 12.8-11 .1 7-5.2 11.3-12.8 11z" stroke="#166534" strokeWidth="3" fill="#86efac" />
+    </svg>
+  );
+}

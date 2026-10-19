@@ -28,7 +28,7 @@ const notoSansJp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "LocAI 野菜仕入れ",
+  title: "LocAI",
   description: "関西の農家さんとお店を、必要な量でつなぐ",
 };
 
