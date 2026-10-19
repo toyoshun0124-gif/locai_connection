@@ -161,3 +161,19 @@ export function LogoMark({ size = 64, ...rest }: IconProps) {
     </svg>
   );
 }
+
+// タイトル「LocAI」の「A」：先から芽が出ている A（ロゴらしくするため）
+// 文字の大きさに合わせて伸び縮みする（高さは、まわりの文字の大きさが基準）
+export function SproutA({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 96" className={className} style={{ height: "1.12em", width: "0.74em" }} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {/* 芽：茎と、左右の葉っぱ */}
+      <path d="M32 33V16" stroke="currentColor" strokeWidth="5" />
+      <path d="M32 22c-1.5-7.5-7.5-12-15.5-11.5.6 7.6 6.8 12 15.5 11.5z" stroke="currentColor" strokeWidth="4.5" fill="#bbf7d0" />
+      <path d="M32 17.5c1-8.2 7-13 15.4-12.6-.1 8.3-6.4 13.2-15.4 12.6z" stroke="currentColor" strokeWidth="4.5" fill="#86efac" />
+      {/* A の形（丸みのある線で描く） */}
+      <path d="M9 90 32 35l23 55" stroke="currentColor" strokeWidth="11" />
+      <path d="M19.5 69h25" stroke="currentColor" strokeWidth="9.5" />
+    </svg>
+  );
+}

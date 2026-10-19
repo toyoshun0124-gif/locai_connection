@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { BUYER_TYPES, PREFECTURES, ROLES } from "@/lib/options";
-import { LogoMark } from "../icons";
+import { SproutA } from "../icons";
 
 type Mode = "login" | "signup";
 
@@ -63,14 +63,14 @@ export default function LoginPage() {
     // 背景は生成り色（うすいベージュ）
     <div className="flex flex-1 flex-col">
       <main className="mx-auto w-full max-w-md px-4 py-10 sm:max-w-lg lg:max-w-xl lg:py-16">
-        {/* アプリの名前（LocAI）と、何のアプリかの一言。関西限定は、新規登録の府県の欄に出す */}
-        <div className="flex flex-col items-center text-center">
-          {/* ロゴ（置き場所は、あとで考える） */}
-          <LogoMark size={72} />
-          <h1 className="mt-3 text-5xl tracking-wide text-green-900 sm:text-6xl">
-            Loc<span className="text-green-600">AI</span>
+        {/* アプリの名前（LocAI）と、何のアプリかの一言。「A」は先から芽が出ている形（ロゴ）。関西限定は、新規登録の府県の欄に出す */}
+        <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
+          <h1 aria-label="LocAI" className="flex items-baseline text-6xl leading-none tracking-wide text-green-900 sm:text-7xl">
+            <span aria-hidden>Loc</span>
+            <SproutA className="mx-[0.02em] text-green-600" />
+            <span aria-hidden className="text-green-600">I</span>
           </h1>
-          <p className="font-heading mt-3 text-base font-medium text-stone-600 sm:text-lg">
+          <p className="font-heading mt-5 text-base font-medium text-stone-600 sm:text-lg">
             関西の農家さんとお店を、
             <br className="sm:hidden" />
             必要な量でつなぐ
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
         {/* 白いカードの中に入力欄をまとめる */}
         {/* カード：スマホでは今の幅、パソコンでは広げて、中の余白も少し広げる */}
-        <div className={`mt-6 ${softCard} p-5 sm:p-8`}>
+        <div className={`mt-8 ${softCard} p-5 sm:p-8`}>
           {/* ログインと新規登録の切り替え */}
           <div className="flex gap-1 rounded-full bg-stone-100 p-1">
             {(["login", "signup"] as const).map((m) => (
