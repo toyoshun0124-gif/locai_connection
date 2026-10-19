@@ -164,18 +164,27 @@ export function LogoMark({ size = 64, ...rest }: IconProps) {
 
 // タイトル「LocAI」の「A」：丸で囲んだ A の先から、芽が丸の外へ出ている形（ロゴらしくするため）
 // 文字の大きさに合わせて伸び縮みする（高さは、まわりの文字の大きさが基準）
+// A の下の端が、ほかの文字の下の端（ベースライン）にそろうように、少し下へずらしている
 export function SproutA({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 112" className={className} style={{ height: "1.3em", width: "1.16em" }} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 100 112"
+      className={className}
+      style={{ height: "1.36em", width: "1.21em", position: "relative", top: "0.14em" }}
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       {/* 丸（中はうすい緑） */}
-      <circle cx="50" cy="66" r="40" stroke="currentColor" strokeWidth="5.5" fill="#f0fdf4" />
+      <circle cx="50" cy="68" r="40" stroke="currentColor" strokeWidth="5.5" fill="#f0fdf4" />
       {/* 芽：A の先から、丸の外へ出る茎と、左右の葉っぱ */}
-      <path d="M50 42V15" stroke="currentColor" strokeWidth="5" />
-      <path d="M50 23c-1.6-8-8-12.8-16.6-12.3.6 8.1 7.3 12.8 16.6 12.3z" stroke="currentColor" strokeWidth="4.5" fill="#bbf7d0" />
-      <path d="M50 18.2c1.1-8.8 7.5-13.9 16.5-13.5-.1 8.9-6.9 14.1-16.5 13.5z" stroke="currentColor" strokeWidth="4.5" fill="#86efac" />
-      {/* A の形（丸みのある線で描く） */}
-      <path d="M31 92 50 44l19 48" stroke="currentColor" strokeWidth="9.5" />
-      <path d="M39 76h22" stroke="currentColor" strokeWidth="8" />
+      <path d="M50 43V14" stroke="currentColor" strokeWidth="5" />
+      <path d="M50 22c-1.6-8-8-12.8-16.6-12.3.6 8.1 7.3 12.8 16.6 12.3z" stroke="currentColor" strokeWidth="4.5" fill="#bbf7d0" />
+      <path d="M50 17.2c1.1-8.8 7.5-13.9 16.5-13.5-.1 8.9-6.9 14.1-16.5 13.5z" stroke="currentColor" strokeWidth="4.5" fill="#86efac" />
+      {/* A の形（丸みのある線で描く）。ほかの文字と同じくらいの高さにする */}
+      <path data-a-shape d="M32 95 50 43l18 52" stroke="currentColor" strokeWidth="10" />
+      <path d="M39 79h22" stroke="currentColor" strokeWidth="8.5" />
     </svg>
   );
 }
