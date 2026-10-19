@@ -67,7 +67,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center pt-6 text-center sm:pt-10">
           <h1 aria-label="LocAI" className="flex items-baseline text-6xl leading-none tracking-wide text-green-900 sm:text-7xl">
             <span aria-hidden>Loc</span>
-            <SproutA className="mx-[0.02em] text-green-600" />
+            <SproutA className="ml-[0.03em] mr-[-0.04em] text-green-600" />
             <span aria-hidden className="text-green-600">I</span>
           </h1>
           <p className="font-heading mt-5 text-base font-medium text-stone-600 sm:text-lg">

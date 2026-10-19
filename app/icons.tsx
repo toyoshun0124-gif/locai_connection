@@ -162,18 +162,20 @@ export function LogoMark({ size = 64, ...rest }: IconProps) {
   );
 }
 
-// タイトル「LocAI」の「A」：先から芽が出ている A（ロゴらしくするため）
+// タイトル「LocAI」の「A」：丸で囲んだ A の先から、芽が丸の外へ出ている形（ロゴらしくするため）
 // 文字の大きさに合わせて伸び縮みする（高さは、まわりの文字の大きさが基準）
 export function SproutA({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 96" className={className} style={{ height: "1.12em", width: "0.74em" }} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      {/* 芽：茎と、左右の葉っぱ */}
-      <path d="M32 33V16" stroke="currentColor" strokeWidth="5" />
-      <path d="M32 22c-1.5-7.5-7.5-12-15.5-11.5.6 7.6 6.8 12 15.5 11.5z" stroke="currentColor" strokeWidth="4.5" fill="#bbf7d0" />
-      <path d="M32 17.5c1-8.2 7-13 15.4-12.6-.1 8.3-6.4 13.2-15.4 12.6z" stroke="currentColor" strokeWidth="4.5" fill="#86efac" />
+    <svg viewBox="0 0 100 112" className={className} style={{ height: "1.3em", width: "1.16em" }} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {/* 丸（中はうすい緑） */}
+      <circle cx="50" cy="66" r="40" stroke="currentColor" strokeWidth="5.5" fill="#f0fdf4" />
+      {/* 芽：A の先から、丸の外へ出る茎と、左右の葉っぱ */}
+      <path d="M50 42V15" stroke="currentColor" strokeWidth="5" />
+      <path d="M50 23c-1.6-8-8-12.8-16.6-12.3.6 8.1 7.3 12.8 16.6 12.3z" stroke="currentColor" strokeWidth="4.5" fill="#bbf7d0" />
+      <path d="M50 18.2c1.1-8.8 7.5-13.9 16.5-13.5-.1 8.9-6.9 14.1-16.5 13.5z" stroke="currentColor" strokeWidth="4.5" fill="#86efac" />
       {/* A の形（丸みのある線で描く） */}
-      <path d="M9 90 32 35l23 55" stroke="currentColor" strokeWidth="11" />
-      <path d="M19.5 69h25" stroke="currentColor" strokeWidth="9.5" />
+      <path d="M31 92 50 44l19 48" stroke="currentColor" strokeWidth="9.5" />
+      <path d="M39 76h22" stroke="currentColor" strokeWidth="8" />
     </svg>
   );
 }
