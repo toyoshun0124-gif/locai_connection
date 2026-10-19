@@ -65,7 +65,7 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[id]">["para
   return (
     <>
       <AppHeader user={user} />
-      <BackLink href={isBuyer ? "/buyer/orders" : "/producer"}>{isBuyer ? "自分の注文" : "届いた申し込み"}に戻る</BackLink>
+      <BackLink href={isBuyer ? "/buyer/orders" : "/producer/orders"}>{isBuyer ? "自分の注文" : "注文"}に戻る</BackLink>
 
       {/* 注文の内容 */}
       <section className={card}>

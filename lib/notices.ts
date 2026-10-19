@@ -26,13 +26,13 @@ export async function noticesFor(user: { id: string; role: string }): Promise<No
       select: { replyDeadline: true },
     });
     if (waiting.length > 0) {
-      notices.push({ kind: "soon", text: `返事の期限が近い申し込みが${waiting.length}件あります`, href: "/producer", count: waiting.length, earliest: waiting[0].replyDeadline });
+      notices.push({ kind: "soon", text: `返事の期限が近い申し込みが${waiting.length}件あります`, href: "/producer/orders", count: waiting.length, earliest: waiting[0].replyDeadline });
     }
     // お店の返事がないまま期限切れになった申し込み（量を減らして返事したもの）
     const expired = await prisma.order.count({
       where: { listing: { producerId: user.id }, status: "EXPIRED", requestedG: { not: null }, replyDeadline: { gte: expiredSince } },
     });
-    if (expired > 0) notices.push({ kind: "expired", text: `お店の返事がないまま期限が来た申し込みが${expired}件あります`, href: "/producer", count: expired });
+    if (expired > 0) notices.push({ kind: "expired", text: `お店の返事がないまま期限が来た申し込みが${expired}件あります`, href: "/producer/orders", count: expired });
   } else {
     // 三上さんの返事が必要（農家さんが量を減らした）で、期限まで24時間を切った申し込み
     const waiting = await prisma.order.findMany({

@@ -1,12 +1,13 @@
 // 出品する画面：まず「新規作成」か「前の出品を使う」かを選ぶ
 import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PREFECTURES } from "@/lib/options";
 import { SHIP_DATE_FROM_DAYS, SHIP_DATE_TO_DAYS } from "@/lib/listing";
-import { addDays, formatKg, formatYmd, gramsToKgText, todayInJapan } from "@/lib/units";
+import { addDays, formatYmd, gramsToKgText, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../../../app-header";
 import { ListingForm, type ListingValues } from "./listing-form";
 
@@ -36,47 +37,8 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
   const { mode, from } = await searchParams;
   const card = `mt-4 ${softCard} p-5`;
 
-  // ① まだ選んでいないとき：新規作成／前の出品を使う を選ぶ
-  if (mode !== "new" && typeof from !== "string") {
-    const past = await prisma.listing.findMany({
-      where: { producerId: user.id }, // 自分の出品だけ
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { id: true, name: true, quantityG: true, pricePerKg: true, createdAt: true },
-    });
-    return (
-      <>
-        <AppHeader user={user} />
-        <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>🥬 </span>出品する</h1>
-
-        <Link href="/producer/listings/new?mode=new" className={`${card} block hover:ring-green-800`}>
-          <p className="font-bold text-green-900">新規作成</p>
-          <p className="text-sm text-stone-600">初めての野菜や、前と違う内容で出品するとき</p>
-        </Link>
-
-        <div className={card}>
-          <p className="font-bold text-green-900">前の出品を使う</p>
-          <p className="text-sm text-stone-600">商品名・送料・受け取り条件などが最初から入ります。量・値段・出荷できる日だけ入力します</p>
-          {past.length === 0 ? (
-            <p className="mt-3 text-sm text-stone-500">まだ出品がありません。最初は「新規作成」から出品してください。</p>
-          ) : (
-            <ul className="mt-3 flex flex-col gap-2">
-              {past.map((l) => (
-                <li key={l.id}>
-                  <Link href={`/producer/listings/new?from=${l.id}`} className="flex justify-between rounded-lg border border-stone-200 px-3 py-2 hover:border-green-800">
-                    <span>{l.name}</span>
-                    <span className="text-sm text-stone-500">
-                      {formatKg(l.quantityG)}・{l.pricePerKg.toLocaleString()}円/kg・{l.createdAt.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </>
-    );
-  }
+  // 新規作成／前の出品を使う を選ぶ画面は、ホームに置いている（何も選ばずに来たらホームへ）
+  if (mode !== "new" && typeof from !== "string") redirect("/producer");
 
   // ② 入力フォーム：新規作成なら空、前の出品を使うなら中身を写す
   const profile = await prisma.profile.findUnique({ where: { userId: user.id }, select: { city: true } });
@@ -133,7 +95,7 @@ async function NewListing({ searchParams }: { searchParams: PageProps<"/producer
       <AppHeader user={user} />
       <div className="mt-6 flex items-baseline justify-between">
         <h1 className="text-xl text-green-900"><span aria-hidden>🥬 </span>{baseName ? "前の出品を使って出品" : "新規作成"}</h1>
-        <Link href="/producer/listings/new" className="text-sm text-green-800 underline">選び直す</Link>
+        <Link href="/producer" className="text-sm text-green-800 underline">選び直す</Link>
       </div>
       {baseName && <p className="text-sm text-stone-600">もとにした出品：{baseName}</p>}
       <div className={card}>

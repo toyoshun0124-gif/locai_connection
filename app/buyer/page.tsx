@@ -10,6 +10,7 @@ import { canOrder, expireOverdueOrders, remainingGramsMap } from "@/lib/stock";
 import { isOrderableShipDate } from "@/lib/order";
 import { dateToYmd, formatKg, formatYmd, gramsToKgText, kgTextToGrams, todayInJapan } from "@/lib/units";
 import { AppHeader, WrongRoleNotice } from "../app-header";
+import { StepCards, type Step } from "../step-cards";
 import { inputBox, liftOnHover, softCard } from "@/lib/ui";
 import { BUDGETS, RECEIVE_FILTERS, matchesReceiveAndBudget, shipDatesForUseDate, type BudgetKey } from "@/lib/search";
 
@@ -46,7 +47,7 @@ function filterParams(keyword: string, sort: string, f: Filters) {
 }
 
 // 使い方の3つのステップ（絵文字・色・説明）
-const STEPS = [
+const STEPS: Step[] = [
   { icon: "🥬", title: "① 探す", text: "食材名で探して、量・使用日・予算などで絞り込み", color: "bg-green-100" },
   { icon: "🤝", title: "② 申し込む", text: "必要な量だけ申し込み。農家さんが「売る・量を減らす・見送る」で返事", color: "bg-amber-100" },
   { icon: "🤖", title: "③ AIがフォロー", text: "買えなかったときは、AIが関西の代わりの野菜と理由を提案", color: "bg-sky-100" },
@@ -99,20 +100,7 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
       <AppHeader user={user} />
 
       {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
-      <section className="mt-5">
-        <h2 className="text-base text-green-900">このアプリの使い方</h2>
-        <ol className="mt-2 grid gap-3 sm:grid-cols-3">
-          {STEPS.map((st) => (
-            <li key={st.title} className={`${softCard} ${liftOnHover} flex items-start gap-3 p-4`}>
-              <span aria-hidden className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl ${st.color}`}>{st.icon}</span>
-              <span className="min-w-0">
-                <span className="font-heading block text-green-900">{st.title}</span>
-                <span className="block text-sm text-stone-600">{st.text}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <StepCards steps={STEPS} />
 
       {/* 食材を探す（食材名だけ必須。量・並び替えは任意の絞り込み） */}
       <section className="mt-6">
