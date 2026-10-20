@@ -17,8 +17,8 @@ function showLabel(i: number, n: number): boolean {
   return i % step === 0 || i === n - 1;
 }
 
-// 棒グラフ：記録1回ごとの「前回より何円」。減ったら上に青、増えたら下にオレンジ
-// （緑とオレンジは、色の見分けがつきにくい人には区別しにくいので、青とオレンジにした）
+// 棒グラフ：記録1回ごとの「前回より何円」。減ったら上に緑、増えたら下にオレンジ（ロスの画面のラベルと同じ）
+// （ふつうの緑はオレンジと見分けにくい人がいるので、少し青みのある緑にした）
 export function SavedBarChart({ points }: { points: { label: string; yen: number }[] }) {
   // 全部 0円 でも目盛りが作れるように、いちばん上は 100円 以上にする
   const max = niceMax(Math.max(100, ...points.map((p) => Math.abs(p.yen))));
@@ -45,7 +45,7 @@ export function SavedBarChart({ points }: { points: { label: string; yen: number
                 <div key={i} className="group relative flex-1" title={`${p.label}：前回より ${savedYenText(p.yen)}`}>
                   <div className="absolute inset-y-0 left-1/2 w-full max-w-10 -translate-x-1/2 rounded group-hover:bg-stone-100/70" />
                   {p.yen > 0 && (
-                    <div className="absolute bottom-1/2 left-1/2 w-3/5 max-w-7 -translate-x-1/2 rounded-t bg-[#0369a1]" style={{ height: `${h}%` }} />
+                    <div className="absolute bottom-1/2 left-1/2 w-3/5 max-w-7 -translate-x-1/2 rounded-t bg-[#047857]" style={{ height: `${h}%` }} />
                   )}
                   {p.yen < 0 && (
                     <div className="absolute left-1/2 top-1/2 w-3/5 max-w-7 -translate-x-1/2 rounded-b bg-[#ea580c]" style={{ height: `${h}%` }} />

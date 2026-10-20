@@ -93,7 +93,7 @@ async function LossTrend({ searchParams }: { searchParams: PageProps<"/buyer/los
           <section className={card}>
             <h2 className="font-bold">前回より何円減ったか</h2>
             <p className="text-xs text-stone-500">
-              <span className="mr-1 inline-block size-2.5 rounded-sm bg-[#0369a1]" aria-hidden />減った（上）
+              <span className="mr-1 inline-block size-2.5 rounded-sm bg-[#047857]" aria-hidden />減った（上）
               <span className="ml-3 mr-1 inline-block size-2.5 rounded-sm bg-[#ea580c]" aria-hidden />増えた（下）
               ・量の差 × その回の単価で計算
             </p>
