@@ -6,6 +6,7 @@ import Link from "next/link";
 import { RECEIVE_LABELS } from "@/lib/order";
 import { formatYen, itemYen } from "@/lib/price";
 import { formatKg, formatYmd, kgTextToGrams } from "@/lib/units";
+import { LOSS_PAST_LABELS, lossNoticeLevel } from "@/lib/loss";
 import { createOrder, type OrderFormState } from "./actions";
 
 type Props = {
@@ -24,9 +25,11 @@ type Props = {
   initialKg: string;
   initialUseDate: string;
   initialReceive: "" | "DELIVERY" | "PICKUP";
+  // 同じ農家さんの同じ野菜の、直近1回のロスの記録（なければ null）
+  prevLoss: { quantityG: number; quarters: number; useDate: string } | null;
 };
 
-export function OrderForm({ listing, remainingG, orderableDates, initialKg, initialUseDate, initialReceive }: Props) {
+export function OrderForm({ listing, remainingG, orderableDates, initialKg, initialUseDate, initialReceive, prevLoss }: Props) {
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [shipDate, setShipDate] = useState("");
   const [useDate, setUseDate] = useState(initialUseDate);
@@ -129,6 +132,7 @@ export function OrderForm({ listing, remainingG, orderableDates, initialKg, init
             <span className="text-xs text-stone-500">{formatKg(listing.minOrderG)}から{formatKg(listing.unitG)}ずつ・残り{formatKg(remainingG)}</span>
             <input inputMode="decimal" className={input} value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder={`例：${formatKg(listing.minOrderG).replace("kg", "")}`} />
             {err("quantity")}
+            <LossNotice prevLoss={prevLoss} grams={grams} />
           </label>
 
           <label className="flex flex-col gap-1">
@@ -192,6 +196,7 @@ export function OrderForm({ listing, remainingG, orderableDates, initialKg, init
               <dt className="text-stone-500">受け取り</dt><dd>{receive && RECEIVE_LABELS[receive]}</dd>
               {wantAiHelp && (<><dt className="text-stone-500">AIの提案</dt><dd>希望する{dishName && `（料理名：${dishName}）`}</dd></>)}
             </dl>
+            <LossNotice prevLoss={prevLoss} grams={grams} />
             <p className="mt-3 text-xs text-stone-500">農家さんが「売ります」と返事をしたら、販売確定になります。まだ売買は決まっていません。</p>
           </div>
           <div className="flex gap-2">
@@ -205,5 +210,23 @@ export function OrderForm({ listing, remainingG, orderableDates, initialKg, init
         </>
       )}
     </form>
+  );
+}
+
+// 前回のロスの知らせ。「警告」の文字は使わず、強さはアイコン、中身は事実の文で伝える
+// アプリは知らせるだけ。申し込みは止めない（何kgにするかは三上さんが決める）
+function LossNotice({ prevLoss, grams }: { prevLoss: Props["prevLoss"]; grams: number | null }) {
+  if (!prevLoss) return null;
+  const level = lossNoticeLevel(prevLoss.quarters, prevLoss.quantityG, grams);
+  if (level === "none") return null;
+  const warning = level === "warning";
+  return (
+    <p className={`mt-2 flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${warning ? "bg-red-50 text-red-900" : "bg-sky-50 text-sky-900"}`}>
+      {/* アイコンの意味は、画面を読み上げる人にも伝わるようにする */}
+      <span role="img" aria-label={warning ? "警告" : "注意"}>{warning ? "⚠️" : "💡"}</span>
+      <span>
+        前回（{formatYmd(prevLoss.useDate)}）は {formatKg(prevLoss.quantityG)} で、{LOSS_PAST_LABELS[prevLoss.quarters]}
+      </span>
+    </p>
   );
 }

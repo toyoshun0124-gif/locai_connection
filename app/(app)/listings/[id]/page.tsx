@@ -83,8 +83,20 @@ async function ListingDetail({
 
   // 期限切れの仮押さえを戻してから、残りの量を計算する
   await expireOverdueOrdersOnce();
-  // 残りの量と、農家さんの「販売確定後のキャンセルの回数」（6章）を、同時に聞く
-  const [remainingG, cancelCount] = await Promise.all([remainingGramsOf(prisma, l), producerCancelCount(l.producer.id)]);
+  // 残りの量と、農家さんの「販売確定後のキャンセルの回数」（6章）と、前回のロスの記録を、同時に聞く
+  // 前回のロス：自分の注文で、同じ農家さんの同じ野菜の、直近1回の記録だけ（ほかのお店の記録は読まない）
+  const [remainingG, cancelCount, prevLossOrder] = await Promise.all([
+    remainingGramsOf(prisma, l),
+    producerCancelCount(l.producer.id),
+    prisma.order.findFirst({
+      where: { buyerId: user.id, status: "CONFIRMED", lossQuarters: { not: null }, listing: { producerId: l.producer.id, name: l.name } },
+      orderBy: [{ useDate: "desc" }, { createdAt: "desc" }],
+      select: { quantityG: true, lossQuarters: true, useDate: true },
+    }),
+  ]);
+  const prevLoss = prevLossOrder
+    ? { quantityG: prevLossOrder.quantityG, quarters: prevLossOrder.lossQuarters ?? 0, useDate: dateToYmd(prevLossOrder.useDate) }
+    : null;
   // 申し込める出荷日（出荷日の4日前まで）
   const today = todayInJapan();
   const orderableDates = futureDates.filter((d) => isOrderableShipDate(d, today)).map((d) => ({ ymd: d, label: formatYmd(d) }));
@@ -187,6 +199,7 @@ async function ListingDetail({
             initialKg={wantG !== null ? gramsToKgText(wantG) : ""}
             initialUseDate={initialUseDate}
             initialReceive={initialReceive}
+            prevLoss={prevLoss}
           />
         )}
       </section>
