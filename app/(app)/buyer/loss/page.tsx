@@ -84,14 +84,14 @@ async function Loss() {
       {/* 食材ごとのまとめ */}
       <section className="mt-5">
         <h2 className="font-bold">これまでの記録（食材・農家さんごと）</h2>
-        {/* ロス金額の変化（比べられる前回の記録があるときだけ） */}
+        {/* ロス金額の変化（比べられる前回の記録があるときだけ）。目に入りやすいように、大きな数字のカードにする */}
+        {/* 減ったら緑、増えたらオレンジ（責める感じにしないため、赤は使わない） */}
         {savedById.size > 0 && (
-          <p className="mt-2 text-sm text-stone-700">
-            ロス金額の変化：前回と比べて合計{" "}
-            <span className={`font-bold ${totalSaved > 0 ? "text-green-800" : totalSaved < 0 ? "text-red-700" : ""}`}>
-              {savedYenText(totalSaved)}（{totalSaved > 0 ? "減りました" : totalSaved < 0 ? "増えました" : "変わりません"}）
-            </span>
-          </p>
+          <div className={`mt-2 rounded-2xl p-4 ring-1 ${totalSaved > 0 ? "bg-green-50 text-green-900 ring-green-200" : totalSaved < 0 ? "bg-orange-50 text-orange-900 ring-orange-200" : "bg-stone-50 text-stone-700 ring-stone-200"}`}>
+            <p className="text-sm">ロス金額の変化（前回と比べて）</p>
+            <p className="mt-1 text-4xl font-bold">{savedYenText(totalSaved)}</p>
+            <p className="mt-1 font-medium">{totalSaved > 0 ? "減りました 🎉" : totalSaved < 0 ? "増えました" : "変わりません"}</p>
+          </div>
         )}
         {byItem.size === 0 ? (
           <p className={`mt-2 ${softCard} p-4 text-sm text-stone-600`}>まだ記録がありません。</p>
@@ -150,7 +150,7 @@ async function Loss() {
               <p className="text-sm text-stone-700">
                 {LOSS_LABELS[o.lossQuarters ?? 0]} → ロス <span className="font-bold">{formatKg(lossGrams(o.quantityG, o.lossQuarters ?? 0))}</span>
                 （{formatYen(lossYen(o.itemYen, o.lossQuarters ?? 0))}）
-                {savedById.has(o.id) && <>・前回より <span className="font-bold">{savedYenText(savedById.get(o.id) ?? 0)}</span></>}
+                {savedById.has(o.id) && <SavedBadge yen={savedById.get(o.id) ?? 0} />}
               </p>
               <LossButtons orderId={o.id} current={o.lossQuarters} />
             </div>
@@ -159,4 +159,10 @@ async function Loss() {
       )}
     </>
   );
+}
+
+// 「前回より ↓400円」の丸いラベル（減ったら緑、増えたらオレンジ、同じなら灰色）
+function SavedBadge({ yen }: { yen: number }) {
+  const color = yen > 0 ? "bg-green-100 text-green-900" : yen < 0 ? "bg-orange-100 text-orange-900" : "bg-stone-100 text-stone-600";
+  return <span className={`ml-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${color}`}>前回より {savedYenText(yen)}</span>;
 }
