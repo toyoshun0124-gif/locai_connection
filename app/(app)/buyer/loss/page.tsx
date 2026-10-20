@@ -4,7 +4,8 @@ import { softCard } from "@/lib/ui";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { LOSS_LABELS, lossGrams, lossPercentText, lossYen, savedYen, savedYenText } from "@/lib/loss";
+import { LOSS_LABELS, lossGrams, lossGroupKey, lossPercentText, lossYen, savedYenByOrder, savedYenText } from "@/lib/loss";
+import Link from "next/link";
 import { formatYen } from "@/lib/price";
 import { dateToYmd, formatKg, formatYmd, todayInJapan } from "@/lib/units";
 import { WrongRoleNotice } from "@/app/app-header";
@@ -50,28 +51,18 @@ async function Loss() {
   const notYet = orders.filter((o) => o.lossQuarters === null);
   const recorded = orders.filter((o) => o.lossQuarters !== null);
 
-  // 同じ農家さんの同じ野菜を、1つのまとまりにする（農家さんによって野菜の大きさが違うため）
-  const keyOf = (o: (typeof recorded)[number]) => `${o.listing.producerId}/${o.listing.name}`;
-
   // 食材（＋農家さん）ごとのまとめ（記録した注文だけで計算する）
   const byItem = new Map<string, { name: string; producerName: string; count: number; purchasedG: number; lossG: number }>();
   for (const o of recorded) {
-    const s = byItem.get(keyOf(o)) ?? { name: o.listing.name, producerName: o.listing.producer.name, count: 0, purchasedG: 0, lossG: 0 };
+    const s = byItem.get(lossGroupKey(o)) ?? { name: o.listing.name, producerName: o.listing.producer.name, count: 0, purchasedG: 0, lossG: 0 };
     s.count += 1;
     s.purchasedG += o.quantityG;
     s.lossG += lossGrams(o.quantityG, o.lossQuarters ?? 0);
-    byItem.set(keyOf(o), s);
+    byItem.set(lossGroupKey(o), s);
   }
 
-  // 1件ずつ、同じ農家さんの同じ野菜の「前回」と比べて、何円減ったかを計算する（古い順に見ていく）
-  const savedById = new Map<string, number>();
-  const lastLossG = new Map<string, number>();
-  for (const o of [...recorded].reverse()) {
-    const nowLossG = lossGrams(o.quantityG, o.lossQuarters ?? 0);
-    const prevLossG = lastLossG.get(keyOf(o));
-    if (prevLossG !== undefined) savedById.set(o.id, savedYen(prevLossG, nowLossG, o.pricePerKg));
-    lastLossG.set(keyOf(o), nowLossG);
-  }
+  // 1件ずつ、同じ農家さんの同じ野菜の「前回」と比べて、何円減ったかを計算する
+  const savedById = savedYenByOrder(recorded);
   // 合計 ＝ 1件ずつの「前回より何円」を足したもの
   const totalSaved = [...savedById.values()].reduce((a, b) => a + b, 0);
 
@@ -87,10 +78,19 @@ async function Loss() {
         {/* ロス金額の変化（比べられる前回の記録があるときだけ）。目に入りやすいように、大きな数字のカードにする */}
         {/* 減ったら緑、増えたらオレンジ（責める感じにしないため、赤は使わない） */}
         {savedById.size > 0 && (
-          <div className={`mt-2 rounded-2xl p-4 ring-1 ${totalSaved > 0 ? "bg-green-50 text-green-900 ring-green-200" : totalSaved < 0 ? "bg-orange-50 text-orange-900 ring-orange-200" : "bg-stone-50 text-stone-700 ring-stone-200"}`}>
-            <p className="text-sm">ロス金額の変化（前回と比べて）</p>
-            <p className="mt-1 text-4xl font-bold">{savedYenText(totalSaved)}</p>
-            <p className="mt-1 font-medium">{totalSaved > 0 ? "減りました 🎉" : totalSaved < 0 ? "増えました" : "変わりません"}</p>
+          // 左に数字、右にボタン（余白が目立たないように横に並べる。スマホでは、ボタンが数字の下に回る）
+          <div className={`mt-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 ring-1 ${totalSaved > 0 ? "bg-green-50 text-green-900 ring-green-200" : totalSaved < 0 ? "bg-orange-50 text-orange-900 ring-orange-200" : "bg-stone-50 text-stone-700 ring-stone-200"}`}>
+            <div>
+              <p className="text-sm">ロス金額の変化（前回と比べて）</p>
+              <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
+                <span className="text-4xl font-bold">{savedYenText(totalSaved)}</span>
+                <span className="font-medium">{totalSaved > 0 ? "減りました 🎉" : totalSaved < 0 ? "増えました" : "変わりません"}</span>
+              </p>
+            </div>
+            {/* これまでの変化を、野菜ごとのグラフで見るページへ */}
+            <Link href="/buyer/loss/trend" className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-medium text-stone-800 ring-1 ring-stone-300 hover:bg-stone-50">
+              詳しく見る（グラフ）→
+            </Link>
           </div>
         )}
         {byItem.size === 0 ? (

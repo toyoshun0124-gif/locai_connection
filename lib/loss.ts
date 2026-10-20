@@ -45,3 +45,24 @@ export function lossNoticeLevel(prevQuarters: number, prevG: number, nowG: numbe
   if (nowG === null || nowG < prevG) return "caution";
   return "warning";
 }
+
+// 同じ農家さんの同じ野菜を、1つのまとまりとして見るための目印（農家さんによって野菜の大きさが違うため）
+export function lossGroupKey(o: { listing: { producerId: string; name: string } }): string {
+  return `${o.listing.producerId}/${o.listing.name}`;
+}
+
+// 記録した注文1件ずつの「前回より何円」（新しい順に並んだ注文を受け取る）。前回がない注文は入らない
+export function savedYenByOrder(
+  newestFirst: { id: string; quantityG: number; lossQuarters: number | null; pricePerKg: number; listing: { producerId: string; name: string } }[],
+): Map<string, number> {
+  const saved = new Map<string, number>();
+  const lastLossG = new Map<string, number>();
+  // 古い順に見ていく
+  for (const o of [...newestFirst].reverse()) {
+    const nowLossG = lossGrams(o.quantityG, o.lossQuarters ?? 0);
+    const prevLossG = lastLossG.get(lossGroupKey(o));
+    if (prevLossG !== undefined) saved.set(o.id, savedYen(prevLossG, nowLossG, o.pricePerKg));
+    lastLossG.set(lossGroupKey(o), nowLossG);
+  }
+  return saved;
+}
