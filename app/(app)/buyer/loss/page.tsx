@@ -11,6 +11,7 @@ import { dateToYmd, formatKg, formatYmd, todayInJapan } from "@/lib/units";
 import { WrongRoleNotice } from "@/app/app-header";
 import { LossButtons } from "./loss-buttons";
 import { Spinner } from "@/app/spinner";
+import { TrashIcon } from "@/app/icons";
 
 export default function LossPage() {
   return (
@@ -69,7 +70,7 @@ async function Loss() {
   const card = `mt-3 ${softCard} p-4`;
   return (
     <>
-      <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>📊 </span>ロスの記録</h1>
+      <h1 className="mt-6 flex items-center gap-2 text-xl text-green-900"><TrashIcon size={24} />ロスの記録</h1>
       <p className="text-sm text-stone-600">営業のあとに、アプリで買った野菜がどれだけ余ったかを、ボタンで記録します。</p>
 
       {/* 食材ごとのまとめ */}

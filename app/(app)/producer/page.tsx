@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/session";
 import { WrongRoleNotice } from "@/app/app-header";
-import { PlusIcon } from "@/app/icons";
+import { HomeIcon } from "@/app/icons";
 import { StepCards, type Step } from "@/app/step-cards";
 import { ListingChooser } from "./listing-chooser";
 import { Spinner } from "@/app/spinner";
@@ -41,7 +41,7 @@ async function ProducerHome() {
       <StepCards steps={STEPS} />
       <section className="mt-6">
         <h1 className="flex items-center gap-2 text-xl text-green-900">
-          <PlusIcon size={24} />
+          <HomeIcon size={24} />
           出品する
         </h1>
         <ListingChooser producerId={user.id} />

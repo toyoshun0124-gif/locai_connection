@@ -7,6 +7,7 @@ import { dateToYmd, gramsToKgText } from "@/lib/units";
 import { WrongRoleNotice } from "@/app/app-header";
 import { AlternativesForm } from "./alternatives-form";
 import { Spinner } from "@/app/spinner";
+import { BrainIcon } from "@/app/icons";
 
 export default function AlternativesPage({ searchParams }: PageProps<"/buyer/alternatives">) {
   return (
@@ -52,7 +53,7 @@ async function Alternatives({ searchParams }: { searchParams: PageProps<"/buyer/
 
   return (
     <>
-      <h1 className="mt-6 text-xl text-green-900"><span aria-hidden>🤖 </span>代わりの野菜を探す</h1>
+      <h1 className="mt-6 flex items-center gap-2 text-xl text-green-900"><BrainIcon size={24} />代わりの野菜を探す</h1>
       <p className="text-sm text-stone-600">関西の野菜で、予定していた料理に使えるものを、AI が提案します。</p>
       <div className={`mt-4 ${softCard} p-5`}>
         <AlternativesForm initial={initial} />

@@ -15,6 +15,7 @@ import { STATUS_LABELS } from "@/lib/order";
 import { WrongRoleNotice } from "@/app/app-header";
 import { softCard } from "@/lib/ui";
 import { Spinner } from "@/app/spinner";
+import { OrdersIcon } from "@/app/icons";
 
 export default function ProducerOrdersPage({ searchParams }: PageProps<"/producer/orders">) {
   return (
@@ -89,7 +90,7 @@ async function ProducerOrders({ searchParams }: { searchParams: PageProps<"/prod
 
       {/* 届いた申し込み（4章B④：申し込んだ順に並べる） */}
       <section className="mt-6">
-        <h1 className="text-xl text-green-900"><span aria-hidden>📥 </span>届いた申し込み</h1>
+        <h1 className="flex items-center gap-2 text-xl text-green-900"><OrdersIcon size={24} />届いた申し込み</h1>
         {listingsWithOrders.length === 0 ? (
           <p className="mt-2 rounded-xl bg-white p-4 text-stone-600 shadow-sm ring-1 ring-stone-200">まだ申し込みはありません。</p>
         ) : (

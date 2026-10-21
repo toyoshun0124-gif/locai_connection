@@ -14,6 +14,7 @@ import { StepCards, type Step } from "@/app/step-cards";
 import { inputBox, liftOnHover, softCard } from "@/lib/ui";
 import { BUDGETS, RECEIVE_FILTERS, matchesReceiveAndBudget, shipDatesForUseDate, type BudgetKey } from "@/lib/search";
 import { Spinner } from "@/app/spinner";
+import { HomeIcon } from "@/app/icons";
 
 // 並び替え（名前順は、名前で有利・不利が決まるので使わない。AI にも決めさせない）
 const SORTS = {
@@ -100,7 +101,7 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
 
       {/* 食材を探す（食材名だけ必須。量・並び替えは任意の絞り込み） */}
       <section className="mt-6">
-        <h1 className="text-xl font-bold text-green-900">野菜を探す</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold text-green-900"><HomeIcon size={24} />野菜を探す</h1>
         <p className="text-sm text-stone-600">関西の農家さんの出品から探せます</p>
         <form action="/buyer" method="get" className={`mt-3 flex flex-col gap-2 p-4 sm:p-5 ${softCard}`}>
           <div className="flex gap-2">

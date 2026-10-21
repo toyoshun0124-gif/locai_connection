@@ -13,6 +13,7 @@ import { BuyerButtons } from "../../orders/respond-buttons";
 import { MessageLink } from "../../orders/message-link";
 import { messageSummary } from "@/lib/messages";
 import { Spinner } from "@/app/spinner";
+import { OrdersIcon } from "@/app/icons";
 
 // 状態ごとの色（返事が必要なものほど目立たせる）
 const STATUS_STYLES = {
@@ -82,7 +83,7 @@ async function BuyerOrders({ searchParams }: { searchParams: PageProps<"/buyer/o
   return (
     <>
       <div className="mt-6 flex items-baseline justify-between">
-        <h1 className="text-xl text-green-900"><span aria-hidden>📋 </span>自分の注文</h1>
+        <h1 className="flex items-center gap-2 text-xl text-green-900"><OrdersIcon size={24} />自分の注文</h1>
         <Link href="/buyer/loss" className="text-sm text-green-800 underline">ロスの記録 →</Link>
       </div>
 
