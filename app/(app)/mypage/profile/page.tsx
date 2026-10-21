@@ -10,7 +10,7 @@ import { Spinner } from "@/app/spinner";
 export default function ProfilePage({ searchParams }: PageProps<"/mypage/profile">) {
   return (
     <div className="flex flex-1 flex-col">
-      <main className="mx-auto w-full max-w-md px-4 pb-6 lg:max-w-3xl lg:px-8">
+      <main className="mx-auto w-full max-w-2xl px-4 pb-6 lg:max-w-4xl lg:px-8 xl:max-w-5xl">
         <Suspense fallback={<Spinner />}>
           <ProfileContent searchParams={searchParams} />
         </Suspense>
