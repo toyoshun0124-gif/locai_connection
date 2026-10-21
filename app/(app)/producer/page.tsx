@@ -38,7 +38,6 @@ async function ProducerHome() {
   }
   return (
     <>
-      <StepCards steps={STEPS} />
       <section className="mt-6">
         <h1 className="flex items-center gap-2 text-xl text-green-900">
           <HomeIcon size={24} />
@@ -46,6 +45,8 @@ async function ProducerHome() {
         </h1>
         <ListingChooser producerId={user.id} />
       </section>
+      {/* 三上さんのホームとそろえて、いちばん使う「出品する」を上に、使い方を下に置く */}
+      <StepCards steps={STEPS} />
     </>
   );
 }
