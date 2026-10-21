@@ -57,12 +57,13 @@ export function AppTabs({ role, initialUnread }: { role: "BUYER" | "PRODUCER"; i
                 href={t.href}
                 aria-current={active ? "page" : undefined}
                 aria-label={t.icon === "chat" && unread > 0 ? `${t.full}（まだ読んでいない ${unread}件）` : t.full}
-                className={`flex flex-col items-center gap-0.5 px-2 py-2 text-[11px] transition-colors lg:w-16 lg:rounded-2xl lg:py-3 ${
+                className={`flex flex-col items-center gap-0.5 px-1 py-2 text-[11px] transition-colors lg:w-16 lg:rounded-2xl lg:py-3 ${
                   active ? "font-bold text-green-800 lg:bg-green-50" : "text-stone-500 hover:text-green-800 lg:hover:bg-stone-50"
                 }`}
               >
                 <Icon size={24} />
-                <span>{t.short}</span>
+                {/* 「メッセージ」が2行にならないように、改行しない */}
+                <span className="whitespace-nowrap">{t.short}</span>
               </Link>
               {t.icon === "chat" && <CountBadge count={unread} />}
               {/* パソコンでマウスを乗せたら、機能の名前を全部出す */}
