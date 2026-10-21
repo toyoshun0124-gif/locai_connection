@@ -1,4 +1,4 @@
-// 期限のお知らせ（6章）。アプリを開いたときに、画面の上に出す。サーバー側だけで使う
+// 期限のお知らせ（6章）。右上のベルに件数を出し、お知らせの画面に中身を出す。サーバー側だけで使う
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { expireOverdueOrdersOnce } from "@/lib/stock";
@@ -52,4 +52,9 @@ export async function noticesFor(user: { id: string; role: string }): Promise<No
     if (expired > 0) notices.push({ kind: "expired", text: `返事がないまま期限が来た申し込みが${expired}件あります。代わりの野菜を探しますか？`, href: "/buyer/orders", count: expired });
   }
   return notices;
+}
+
+// お知らせの件数（右上のベルに出す数）＝ お知らせに出ている申し込みの数を足したもの
+export async function noticeCountFor(user: { id: string; role: string }): Promise<number> {
+  return (await noticesFor(user)).reduce((sum, n) => sum + n.count, 0);
 }

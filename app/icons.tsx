@@ -115,6 +115,16 @@ export function ChatIcon(p: IconProps) {
   );
 }
 
+// お知らせ（ベル）
+export function BellIcon(p: IconProps) {
+  return (
+    <Base {...p}>
+      <path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </Base>
+  );
+}
+
 // プロフィール（人）
 export function UserIcon(p: IconProps) {
   return (

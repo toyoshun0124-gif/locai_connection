@@ -1,39 +1,20 @@
 // ログイン後の画面の上に出す帯（誰がログインしているか・ログアウト）
 import { BUYER_TYPES, PREFECTURES, ROLES } from "@/lib/options";
 import type { CurrentUser } from "@/lib/session";
-import { noticesFor } from "@/lib/notices";
+import { noticeCountFor } from "@/lib/notices";
 import { unreadTotalFor } from "@/lib/messages";
 import { LogoutButton } from "./logout-button";
 import { AppTabs } from "./app-tabs";
 import { UserIcon } from "./icons";
-import { MessageBadge } from "./message-badge";
+import { NoticeBell } from "./notice-bell";
 import Link from "next/link";
 
-// 画面の上に出す、期限のお知らせ（6章）
-async function Notices({ user }: { user: CurrentUser }) {
-  const notices = await noticesFor(user);
-  if (notices.length === 0) return null;
-  const fmt = (d: Date) => d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  return (
-    <div className="mt-3 flex flex-col gap-2">
-      {notices.map((n) => (
-        <Link
-          key={n.kind}
-          href={n.href}
-          className={`rounded-lg px-3 py-2 text-sm font-medium ${n.kind === "soon" ? "bg-amber-100 text-amber-900 ring-1 ring-amber-300" : "bg-stone-100 text-stone-800 ring-1 ring-stone-300"}`}
-        >
-          {n.kind === "soon" ? "⏰ " : ""}
-          {n.text}
-          {n.earliest && `（いちばん早い期限：${fmt(n.earliest)}）`} →
-        </Link>
-      ))}
-    </div>
-  );
+// 右上のお知らせ（ベル）と下のタブ。最初の数はサーバーで数え、そのあとは画面を移るたびに聞き直す
+async function Bell({ user }: { user: CurrentUser }) {
+  return <NoticeBell initial={await noticeCountFor(user)} />;
 }
-
-// 右上のメッセージのアイコン。最初の数はサーバーで数え、そのあとは画面を移るたびに聞き直す
-async function MessageButton({ user }: { user: CurrentUser }) {
-  return <MessageBadge initial={await unreadTotalFor(user)} />;
+async function Tabs({ user }: { user: CurrentUser }) {
+  return <AppTabs role={user.role as "BUYER" | "PRODUCER"} initialUnread={await unreadTotalFor(user)} />;
 }
 
 export function AppHeader({ user }: { user: CurrentUser }) {
@@ -50,9 +31,9 @@ export function AppHeader({ user }: { user: CurrentUser }) {
             {roleLabel}・{PREFECTURES[user.prefecture as keyof typeof PREFECTURES]}
           </p>
         </div>
-        {/* 右上：メッセージ・プロフィール・ログアウト（「トップ」はタブの「ホーム」と同じなので置かない） */}
+        {/* 右上：お知らせ・プロフィール・ログアウト（メッセージは主要な機能なので、下のタブに置く） */}
         <div className="flex shrink-0 items-center gap-1">
-          <MessageButton user={user} />
+          <Bell user={user} />
           <Link
             href="/mypage/profile"
             title="プロフィール"
@@ -65,9 +46,8 @@ export function AppHeader({ user }: { user: CurrentUser }) {
           <LogoutButton />
         </div>
       </header>
-      <Notices user={user} />
       {/* タブ（パソコンは左、スマホは下） */}
-      <AppTabs role={user.role as "BUYER" | "PRODUCER"} />
+      <Tabs user={user} />
     </>
   );
 }

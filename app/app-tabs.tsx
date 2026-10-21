@@ -3,11 +3,15 @@
 // 今どのタブを見ているかは、画面のアドレスから決める
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BrainIcon, HomeIcon, InboxIcon, OrdersIcon, PlusIcon, SproutIcon, TrashIcon } from "./icons";
+import { BrainIcon, ChatIcon, HomeIcon, InboxIcon, OrdersIcon, PlusIcon, SproutIcon, TrashIcon } from "./icons";
+import { CountBadge, useLiveCount } from "./count-badge";
 
-const ICONS = { home: HomeIcon, orders: OrdersIcon, loss: TrashIcon, ai: BrainIcon, inbox: InboxIcon, listings: SproutIcon, plus: PlusIcon };
+const ICONS = { home: HomeIcon, orders: OrdersIcon, loss: TrashIcon, ai: BrainIcon, inbox: InboxIcon, listings: SproutIcon, plus: PlusIcon, chat: ChatIcon };
 
 type Tab = { href: string; icon: keyof typeof ICONS; short: string; full: string; match: (path: string) => boolean };
+
+// メッセージは主要な機能なので、お店・農家さんのどちらにもタブを置く（まだ読んでいない数を出す）
+const MESSAGES_TAB: Tab = { href: "/messages", icon: "chat", short: "メッセージ", full: "メッセージ", match: (p) => p.startsWith("/messages") };
 
 // 役割ごとのタブ
 const TABS: Record<"BUYER" | "PRODUCER", Tab[]> = {
@@ -17,17 +21,21 @@ const TABS: Record<"BUYER" | "PRODUCER", Tab[]> = {
     { href: "/buyer/orders", icon: "orders", short: "注文", full: "自分の注文", match: (p) => p.startsWith("/buyer/orders") },
     { href: "/buyer/loss", icon: "loss", short: "ロス", full: "ロスの記録", match: (p) => p.startsWith("/buyer/loss") },
     { href: "/buyer/alternatives", icon: "ai", short: "AI", full: "代わりの野菜を探す（AIの提案）", match: (p) => p.startsWith("/buyer/alternatives") },
+    MESSAGES_TAB,
   ],
   PRODUCER: [
     // 出品する画面（新規作成・前の出品を使う）を開いているときも「ホーム」
     { href: "/producer", icon: "home", short: "ホーム", full: "ホーム（出品する）", match: (p) => p === "/producer" || p.startsWith("/producer/listings/new") },
     { href: "/producer/orders", icon: "orders", short: "注文", full: "届いた申し込み（注文）", match: (p) => p.startsWith("/producer/orders") },
     { href: "/producer/listings", icon: "listings", short: "出品一覧", full: "自分の出品の一覧", match: (p) => p === "/producer/listings" },
+    MESSAGES_TAB,
   ],
 };
 
-export function AppTabs({ role }: { role: "BUYER" | "PRODUCER" }) {
+export function AppTabs({ role, initialUnread }: { role: "BUYER" | "PRODUCER"; initialUnread: number }) {
   const path = usePathname();
+  // まだ読んでいないメッセージの数（画面を移るたびに聞き直す）
+  const unread = useLiveCount("/api/unread", initialUnread);
   const tabs = TABS[role];
   return (
     <nav
@@ -48,7 +56,7 @@ export function AppTabs({ role }: { role: "BUYER" | "PRODUCER" }) {
               <Link
                 href={t.href}
                 aria-current={active ? "page" : undefined}
-                aria-label={t.full}
+                aria-label={t.icon === "chat" && unread > 0 ? `${t.full}（まだ読んでいない ${unread}件）` : t.full}
                 className={`flex flex-col items-center gap-0.5 px-2 py-2 text-[11px] transition-colors lg:w-16 lg:rounded-2xl lg:py-3 ${
                   active ? "font-bold text-green-800 lg:bg-green-50" : "text-stone-500 hover:text-green-800 lg:hover:bg-stone-50"
                 }`}
@@ -56,6 +64,7 @@ export function AppTabs({ role }: { role: "BUYER" | "PRODUCER" }) {
                 <Icon size={24} />
                 <span>{t.short}</span>
               </Link>
+              {t.icon === "chat" && <CountBadge count={unread} />}
               {/* パソコンでマウスを乗せたら、機能の名前を全部出す */}
               <span className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-stone-800 px-2.5 py-1 text-xs text-white opacity-0 shadow transition-opacity group-hover:opacity-100 lg:block">
                 {t.full}
