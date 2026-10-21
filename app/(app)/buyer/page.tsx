@@ -98,9 +98,6 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
   return (
     <>
 
-      {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
-      <StepCards steps={STEPS} />
-
       {/* 食材を探す（食材名だけ必須。量・並び替えは任意の絞り込み） */}
       <section className="mt-6">
         <h1 className="text-xl font-bold text-green-900">野菜を探す</h1>
@@ -157,6 +154,10 @@ async function BuyerHome({ searchParams }: { searchParams: PageProps<"/buyer">["
       {parsed?.success && !kgError && (
         <Results keyword={parsed.data.q} filters={filters} sort={parsed.data.sort ?? "new"} />
       )}
+
+      {/* このアプリの使い方：まず探す → 申し込む → 買えなかったら AI が代わりを提案、という順番を見せる */}
+      {/* 探すがいちばん上にある方が押しやすいので、使い方は検索結果のさらに下に置く */}
+      <StepCards steps={STEPS} />
 
     </>
   );
