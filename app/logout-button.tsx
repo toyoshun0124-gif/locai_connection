@@ -19,7 +19,8 @@ export function LogoutButton() {
       }}
     >
       <LogoutIcon size={22} />
-      <span>ログアウト</span>
+      {/* スマホの幅（640px より狭い）ではアイコンだけにする */}
+      <span className="hidden sm:inline">ログアウト</span>
     </button>
   );
 }

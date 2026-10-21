@@ -14,7 +14,8 @@ export function NoticeBell({ initial }: { initial: number }) {
       className="relative flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-[11px] text-stone-600 hover:bg-white/70 hover:text-green-800"
     >
       <BellIcon size={22} />
-      <span>お知らせ</span>
+      {/* スマホの幅（640px より狭い）ではアイコンだけにする */}
+      <span className="hidden sm:inline">お知らせ</span>
       <CountBadge count={count} />
     </Link>
   );
